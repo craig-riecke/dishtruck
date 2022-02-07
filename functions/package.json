@@ -1,0 +1,23 @@
+{
+  "name": "dishtruck-functions",
+  "version": "1.0.0",
+  "description": "Dishtruck is a service that provides sanitzed reusable togo containers",
+  "main": "index.js",
+  "repository": "https://github.com/craig-riecke/dishtruck",
+  "dependencies": {
+    "@google-cloud/functions-framework": "^2.1.1",
+    "dotenv": "^16.0.0",
+    "pg": "^8.7.3"
+  },
+  "devDependencies": {
+    "@types/node": "^17.0.15",
+    "@types/pg": "^8.6.4",
+    "typescript": "^4.5.5"
+  },
+  "scripts": {
+    "start": "tsc && functions-framework --target",
+    "deploy": "gcloud functions deploy --runtime nodejs16 --trigger-http --allow-unauthenticated --project=dishtruck --env-vars-file .env.yaml --service-account locations-member@dishtruck.iam.gserviceaccount.com"
+  },
+  "author": "Craig Riecke",
+  "license": "MIT"
+}
