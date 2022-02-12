@@ -30,6 +30,17 @@ let pgPool: Pool;
 
 export const locations: HttpFunction = async (req: any, res) => {
   try {
+    // Handle CORS for now.
+    res.set('Access-Control-Allow-Origin', '*');
+
+    if (req.method === 'OPTIONS') {
+      // Send response to OPTIONS requests
+      res.set('Access-Control-Allow-Methods', 'GET');
+      res.set('Access-Control-Allow-Headers', 'Content-Type');
+      res.set('Access-Control-Max-Age', '3600');
+      res.status(204).send('');
+      return;
+    }
     // This is not cool, but
     const params = req.path.split('/');
     const type = params[params.length - 1];
@@ -55,6 +66,18 @@ export const locations: HttpFunction = async (req: any, res) => {
 
 export const transactions: HttpFunction = async (req: any, res) => {
   try {
+    // Handle CORS for now.
+    res.set('Access-Control-Allow-Origin', '*');
+
+    if (req.method === 'OPTIONS') {
+      // Send response to OPTIONS requests
+      res.set('Access-Control-Allow-Methods', 'GET');
+      res.set('Access-Control-Allow-Headers', 'Content-Type');
+      res.set('Access-Control-Max-Age', '3600');
+      res.status(204).send('');
+      return;
+    }
+
     if (req.method !== 'POST') {
       throw new Error('Must post transaction here');
     }

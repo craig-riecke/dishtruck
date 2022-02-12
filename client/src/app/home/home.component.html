@@ -1,0 +1,15 @@
+<div class="outer-container" *ngIf="memberRecord$ | async as memberRecord">
+  <img src="assets/dish-truck-logo-small.jpeg" />
+
+  <h1>Hello {{ memberRecord.full_name }}</h1>
+
+  <h2>
+    You Have
+    {{ memberRecord.qty_plastic + memberRecord.qty_metal }}
+    containers signed out
+  </h2>
+
+  <a mat-raised-button routerLink="/signout-containers">Signout Container(s)</a>
+  <br /><br />
+  <button mat-raised-button>Find Dropoff Locations Near Me</button>
+</div>

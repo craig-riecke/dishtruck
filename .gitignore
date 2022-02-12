@@ -105,4 +105,4 @@ dist
 
 .env.yaml
 # Don't need compiled JS, just TypeScript
-**/.js
+*.js
