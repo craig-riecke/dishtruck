@@ -99,14 +99,17 @@ export class TransactionsService {
       throw new Error(`Can only dropoff from 1-50 containers at a time`);
     }
 
+    // TODO: Get member location id from authentication
+    const from_location_id = 5;
+
     // And don't allow them to return more than they have
-    const member = await LocationsService.locationbyId(pgPool, to_location_id);
+    const member = await LocationsService.locationbyId(
+      pgPool,
+      from_location_id
+    );
     if (qty_metal > member.qty_metal || qty_plastic > member.qty_plastic) {
       throw new Error('You cannot return more dishes than you have');
     }
-
-    // TODO: Get member location id from authentication
-    const from_location_id = 5;
 
     const client: PoolClient = await pgPool.connect();
     try {
