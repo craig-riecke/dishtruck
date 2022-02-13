@@ -1,5 +1,5 @@
 <div class="outer-container" *ngIf="verifyDetails">
-  <img src="assets/dish-truck-logo-small.jpeg" />
+  <img class="dishtruck-logo" src="assets/dish-truck-logo-small.jpeg" />
 
   <h1>You're Ready!</h1>
 
@@ -16,6 +16,6 @@
     {{ verifyDetails.qty }} containers from {{ verifyDetails.affiliate_name }}
   </h1>
 
-  <a mat-button-raised [routerLink]="'/home'">Back to The Home Screen</a>
+  <a mat-raised-button [routerLink]="'/home'">Back to The Home Screen</a>
 </div>
 <div *ngIf="!verifyDetails">Ooops. Did you checkout?</div>

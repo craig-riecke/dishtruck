@@ -14,6 +14,7 @@ import { SignoutContainersComponent } from './signout-containers/signout-contain
 import { ReactiveFormsModule } from '@angular/forms';
 import { VerifySignoutComponent } from './verify-signout/verify-signout.component';
 import { DropoffContainersComponent } from './dropoff-containers/dropoff-containers.component';
+import { FindDropoffComponent } from './find-dropoff/find-dropoff.component';
 
 @NgModule({
   declarations: [
@@ -22,6 +23,7 @@ import { DropoffContainersComponent } from './dropoff-containers/dropoff-contain
     SignoutContainersComponent,
     VerifySignoutComponent,
     DropoffContainersComponent,
+    FindDropoffComponent,
   ],
   imports: [
     BrowserModule,
