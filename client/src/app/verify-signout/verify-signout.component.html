@@ -1,0 +1,21 @@
+<div class="outer-container" *ngIf="verifyDetails">
+  <img src="assets/dish-truck-logo-small.jpeg" />
+
+  <h1>You're Ready!</h1>
+
+  <p>
+    Show this device to the affiliate and they'll give you your
+    containers...ready for eatin'
+  </p>
+
+  <mat-divider></mat-divider>
+
+  <h2>This Dishtruck Member is authorized for</h2>
+
+  <h1>
+    {{ verifyDetails.qty }} containers from {{ verifyDetails.affiliate_name }}
+  </h1>
+
+  <a mat-button-raised [routerLink]="'/home'">Back to The Home Screen</a>
+</div>
+<div *ngIf="!verifyDetails">Ooops. Did you checkout?</div>

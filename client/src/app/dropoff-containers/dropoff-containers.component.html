@@ -1,0 +1,43 @@
+<div class="outer-container" *ngIf="containerNumbers">
+  <img src="assets/dish-truck-logo-small.jpeg" />
+
+  <h1>Return Containers</h1>
+
+  <form [formGroup]="dropoffForm" (submit)="saveSignout()">
+    <p>How many plastic containers are you returning?</p>
+
+    <mat-chip-list formControlName="qty_plastic" [selectable]="true">
+      <mat-chip
+        *ngFor="let containerNumber of containerNumbers.plastic"
+        [value]="containerNumber"
+        (click)="changePlasticQtyTo(containerNumber)"
+        >{{ containerNumber }}</mat-chip
+      >
+    </mat-chip-list>
+
+    <br />
+
+    <p>How many metal containers are you returning?</p>
+
+    <mat-chip-list formControlName="qty_metal" [selectable]="true">
+      <mat-chip
+        *ngFor="let containerNumber of containerNumbers.metal"
+        [value]="containerNumber"
+        (click)="changeMetalQtyTo(containerNumber)"
+        >{{ containerNumber }}</mat-chip
+      >
+    </mat-chip-list>
+
+    <br />
+
+    <mat-divider></mat-divider>
+    <br />
+
+    <button mat-raised-button [disabled]="dropoffForm.invalid || saving">
+      Complete Dropoff
+    </button>
+
+    <br /><br />
+    <mat-progress-bar mode="indeterminate" *ngIf="saving"></mat-progress-bar>
+  </form>
+</div>

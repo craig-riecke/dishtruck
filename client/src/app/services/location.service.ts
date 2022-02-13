@@ -29,4 +29,10 @@ export class LocationService {
       `${environment.DISHTRUCK_API_BASE_URL}/locations/affiliate`
     );
   }
+
+  getDropoffPoints() {
+    return this.http.get<DishtruckLocation[]>(
+      `${environment.DISHTRUCK_API_BASE_URL}/locations/dropoff-point`
+    );
+  }
 }

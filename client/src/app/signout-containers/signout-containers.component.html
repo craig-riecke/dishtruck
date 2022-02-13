@@ -6,11 +6,11 @@
   <form [formGroup]="signoutForm" (submit)="saveSignout()">
     <p>Where are picking up your order?</p>
 
-    <mat-chip-list formControlName="affiliate_location_id" [selectable]="true">
+    <mat-chip-list formControlName="from_location_id" [selectable]="true">
       <mat-chip
         *ngFor="let affiliate of affiliates"
         [value]="affiliate.id"
-        (click)="changeAffiliateTo(affiliate.id)"
+        (click)="changeAffiliateTo(affiliate.id, affiliate.full_name)"
         >{{ affiliate.full_name }}</mat-chip
       >
     </mat-chip-list>

@@ -12,9 +12,17 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { HttpClientModule } from '@angular/common/http';
 import { SignoutContainersComponent } from './signout-containers/signout-containers.component';
 import { ReactiveFormsModule } from '@angular/forms';
+import { VerifySignoutComponent } from './verify-signout/verify-signout.component';
+import { DropoffContainersComponent } from './dropoff-containers/dropoff-containers.component';
 
 @NgModule({
-  declarations: [AppComponent, HomeComponent, SignoutContainersComponent],
+  declarations: [
+    AppComponent,
+    HomeComponent,
+    SignoutContainersComponent,
+    VerifySignoutComponent,
+    DropoffContainersComponent,
+  ],
   imports: [
     BrowserModule,
     AppRoutingModule,
