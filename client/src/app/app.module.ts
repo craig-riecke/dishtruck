@@ -15,6 +15,8 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { VerifySignoutComponent } from './verify-signout/verify-signout.component';
 import { DropoffContainersComponent } from './dropoff-containers/dropoff-containers.component';
 import { FindDropoffComponent } from './find-dropoff/find-dropoff.component';
+import { ServiceWorkerModule } from '@angular/service-worker';
+import { environment } from '../environments/environment';
 
 @NgModule({
   declarations: [
@@ -35,6 +37,12 @@ import { FindDropoffComponent } from './find-dropoff/find-dropoff.component';
     MatDividerModule,
     MatProgressBarModule,
     ReactiveFormsModule,
+    ServiceWorkerModule.register('ngsw-worker.js', {
+      enabled: environment.production,
+      // Register the ServiceWorker as soon as the app is stable
+      // or after 30 seconds (whichever comes first).
+      registrationStrategy: 'registerWhenStable:30000'
+    }),
   ],
   providers: [],
   bootstrap: [AppComponent],
