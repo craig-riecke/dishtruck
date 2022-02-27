@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { SocialAuthService } from 'angularx-social-login';
 import { Observable } from 'rxjs';
 import {
   DishtruckLocation,
@@ -13,7 +14,10 @@ import {
 export class HomeComponent implements OnInit {
   memberRecord$: Observable<DishtruckLocation>;
 
-  constructor(private locationService: LocationService) {}
+  constructor(
+    private locationService: LocationService,
+    public socialAuthService: SocialAuthService
+  ) {}
 
   ngOnInit(): void {
     this.memberRecord$ = this.locationService.getMyMemberRecord();

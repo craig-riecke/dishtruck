@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { Observable, Subscription } from 'rxjs';
+import { forkJoin, map, Observable, Subscription } from 'rxjs';
 import {
   DishtruckLocation,
   LocationService,
@@ -15,15 +15,16 @@ import { Router } from '@angular/router';
   styleUrls: ['./signout-containers.component.scss'],
 })
 export class SignoutContainersComponent implements OnInit, OnDestroy {
-  affiliates$: Observable<DishtruckLocation[]>;
+  foodVendors$: Observable<DishtruckLocation[]>;
   containerNumbers = range(1, 10);
   signoutForm = new FormGroup({
     from_location_id: new FormControl(null, Validators.required),
     qty: new FormControl(null, Validators.required),
   });
   saving = false;
-  selectedAffiliateName: string;
+  selectedfoodVendorName: string;
   saveSubscription: Subscription;
+  selectedParentLocation?: number;
 
   constructor(
     private locationService: LocationService,
@@ -32,12 +33,26 @@ export class SignoutContainersComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.affiliates$ = this.locationService.getAffiliates();
+    this.foodVendors$ = this.locationService.getFoodVendors();
   }
 
-  changeAffiliateTo(newId: number, affiliate_name: string) {
-    this.signoutForm.controls['from_location_id'].setValue(newId);
-    this.selectedAffiliateName = affiliate_name;
+  changeFoodVendorTo(foodVendor: DishtruckLocation) {
+    if (foodVendor.requires_sub_location) {
+      if (!this.selectedParentLocation) {
+        this.foodVendors$ = forkJoin([
+          this.locationService.getFoodVendors(),
+          this.locationService.getSubLocations(foodVendor.id),
+        ]).pipe(
+          map(([primaryFoodVendors, subFoodVendors]) => [
+            ...primaryFoodVendors,
+            ...subFoodVendors,
+          ])
+        );
+      }
+    } else {
+      this.signoutForm.controls['from_location_id'].setValue(foodVendor.id);
+      this.selectedfoodVendorName = foodVendor.full_name;
+    }
   }
 
   changeQtyTo(newQty: number) {
@@ -47,7 +62,7 @@ export class SignoutContainersComponent implements OnInit, OnDestroy {
   saveSignout() {
     this.saving = true;
     this.saveSubscription = this.transactionService
-      .signoutContainers(this.signoutForm.value, this.selectedAffiliateName)
+      .signoutContainers(this.signoutForm.value, this.selectedfoodVendorName)
       .subscribe(() => this.router.navigate(['verify-signout']));
   }
 

@@ -1,0 +1,132 @@
+# openapi2-functions.yaml
+swagger: '2.0'
+info:
+  title: all
+  description: All Dishtruck APIs
+  version: 1.0.4
+schemes:
+  - https
+produces:
+  - application/json
+paths:
+  /helloWorld:
+    get:
+      summary: Greet a user
+      operationId: helloWorld
+      x-google-backend:
+        address: https://us-central1-dishtruck.cloudfunctions.net/
+        path_translation: APPEND_PATH_TO_ADDRESS
+      responses:
+        '200':
+          description: A successful response
+          schema:
+            type: string
+  /locations/{locationType}:
+    get:
+      summary: Get locations of a certain type
+      operationId: locationsByType
+      x-google-backend:
+        address: https://us-central1-dishtruck.cloudfunctions.net
+        path_translation: APPEND_PATH_TO_ADDRESS
+      produces:
+        - 'application/json'
+      parameters:
+        - name: 'locationType'
+          required: true
+          in: 'path'
+          description: 'Type of location to list'
+          type: 'string'
+          enum:
+            - 'food-vendor'
+            - 'dropoff-point'
+      responses:
+        '200':
+          description: A successful response
+          schema:
+            type: 'array'
+            items:
+              $ref: '#/definitions/Location'
+  /transactions/{transactionType}:
+    post:
+      summary: Post inventory transactions of a certain type
+      operationId: transactByType
+      x-google-backend:
+        address: https://us-central1-dishtruck.cloudfunctions.net
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: 'transactionType'
+          required: true
+          in: 'path'
+          description: 'Type of inventory transaction'
+          type: 'string'
+          enum:
+            - 'checkout-container'
+            - 'return-container'
+        - in: 'body'
+          name: 'body'
+          description: 'Parameters for the transaction'
+          required: true
+          schema:
+            $ref: '#/definitions/Transaction'
+      responses:
+        '200':
+          description: A successful response
+          schema:
+            type: string
+
+definitions:
+  Location:
+    type: 'object'
+    properties:
+      id:
+        type: 'integer'
+        format: 'int32'
+      type:
+        type: 'string'
+        format: 'int32'
+        enum:
+          - 'member'
+          - 'food-vendor'
+          - 'dropoff-point'
+      unique_id:
+        type: 'integer'
+        format: 'int32'
+      full_name:
+        type: 'string'
+      qty_metal:
+        type: 'integer'
+        format: 'int32'
+      qty_plastic:
+        type: 'integer'
+        format: 'int32'
+      creation_date:
+        type: 'string'
+        format: 'date-time'
+  Transaction:
+    type: 'object'
+    properties:
+      qty:
+        type: 'integer'
+        format: 'int32'
+      qty_metal:
+        type: 'integer'
+        format: 'int32'
+      qty_plastic:
+        type: 'integer'
+        format: 'int32'
+      from_location_id:
+        type: 'integer'
+        format: 'int32'
+      to_location_id:
+        type: 'integer'
+        format: 'int32'
+security:
+  - dishtruck_oauth_client: []
+securityDefinitions:
+  dishtruck_oauth_client:
+    authorizationUrl: 'https://accounts.google.com/o/oauth2/auth'
+    flow: 'implicit'
+    type: 'oauth2'
+    x-google-issuer: 'https://accounts.google.com'
+    x-google-jwks_uri: 'https://www.googleapis.com/oauth2/v3/certs'
+    x-google-audiences: '952379108326-ct5jshq38p20tr910lnkh57c0hdqqf75.apps.googleusercontent.com'

@@ -1,4 +1,4 @@
-<div class="outer-container" *ngIf="affiliates$ | async as affiliates">
+<div class="outer-container" *ngIf="foodVendors$ | async as foodVendors">
   <img class="dishtruck-logo" src="assets/dish-truck-logo-small.jpeg" />
 
   <h1>Signout Containers</h1>
@@ -8,10 +8,10 @@
 
     <mat-chip-list formControlName="from_location_id" [selectable]="true">
       <mat-chip
-        *ngFor="let affiliate of affiliates"
-        [value]="affiliate.id"
-        (click)="changeAffiliateTo(affiliate.id, affiliate.full_name)"
-        >{{ affiliate.full_name }}</mat-chip
+        *ngFor="let foodVendor of foodVendors"
+        [value]="foodVendor.id"
+        (click)="changeFoodVendorTo(foodVendor)"
+        >{{ foodVendor.full_name }}</mat-chip
       >
     </mat-chip-list>
 

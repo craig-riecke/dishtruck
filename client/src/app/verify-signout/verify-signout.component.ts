@@ -13,10 +13,7 @@ import {
 export class VerifySignoutComponent implements OnInit {
   verifyDetails: VerifyCheckout | undefined;
 
-  constructor(
-    private transactionService: TransactionService,
-    private router: Router
-  ) {}
+  constructor(private transactionService: TransactionService) {}
 
   ngOnInit(): void {
     this.verifyDetails = this.transactionService.getLastVerifiedCheckout();

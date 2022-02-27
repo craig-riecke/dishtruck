@@ -10,7 +10,8 @@ export interface CheckoutContainerAction {
 
 export interface VerifyCheckout {
   qty: number;
-  affiliate_name: string;
+  food_vendor_name: string;
+  timestamp: Date;
 }
 
 export interface DropoffContainerAction {
@@ -29,7 +30,7 @@ export class TransactionService {
 
   signoutContainers(
     checkoutContainerAction: CheckoutContainerAction,
-    affiliate_name: string
+    food_vendor_name: string
   ) {
     return this.http
       .post<void>(
@@ -41,7 +42,8 @@ export class TransactionService {
           () =>
             (this.checkedOut = {
               qty: checkoutContainerAction.qty,
-              affiliate_name,
+              food_vendor_name,
+              timestamp: new Date(),
             })
         )
       );

@@ -17,6 +17,9 @@ import { DropoffContainersComponent } from './dropoff-containers/dropoff-contain
 import { FindDropoffComponent } from './find-dropoff/find-dropoff.component';
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { environment } from '../environments/environment';
+import { GoogleLoginProvider, SocialLoginModule } from 'angularx-social-login';
+import { AuthGuard } from './auth.guard';
+import { LoginComponent } from './login/login.component';
 
 @NgModule({
   declarations: [
@@ -26,6 +29,7 @@ import { environment } from '../environments/environment';
     VerifySignoutComponent,
     DropoffContainersComponent,
     FindDropoffComponent,
+    LoginComponent,
   ],
   imports: [
     BrowserModule,
@@ -41,10 +45,27 @@ import { environment } from '../environments/environment';
       enabled: environment.production,
       // Register the ServiceWorker as soon as the app is stable
       // or after 30 seconds (whichever comes first).
-      registrationStrategy: 'registerWhenStable:30000'
+      registrationStrategy: 'registerWhenStable:30000',
     }),
+    SocialLoginModule,
   ],
-  providers: [],
+  providers: [
+    {
+      provide: 'SocialAuthServiceConfig',
+      useValue: {
+        autoLogin: true, //keeps the user signed in
+        providers: [
+          {
+            id: GoogleLoginProvider.PROVIDER_ID,
+            provider: new GoogleLoginProvider(
+              '952379108326-ct5jshq38p20tr910lnkh57c0hdqqf75.apps.googleusercontent.com'
+            ), // your client id
+          },
+        ],
+      },
+    },
+    AuthGuard,
+  ],
   bootstrap: [AppComponent],
 })
 export class AppModule {}

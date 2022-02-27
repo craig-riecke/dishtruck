@@ -3,6 +3,7 @@ import { Pool, PoolConfig } from 'pg';
 import * as dotenv from 'dotenv';
 import { LocationsService } from './services/locations.service';
 import { TransactionsService } from './services/transactions.service';
+import * as _ from 'lodash';
 
 dotenv.config();
 
@@ -54,7 +55,13 @@ export const locations: HttpFunction = async (req: any, res) => {
     }
 
     console.log('Running query');
-    const locations = await LocationsService.locationsWithType(pgPool, type);
+    const locations =
+      type === 'sublocations'
+        ? await LocationsService.sublocations(
+            pgPool,
+            _.toInteger(req.query.parent_location_id)
+          )
+        : await LocationsService.locationsWithType(pgPool, type);
     console.log('Query ended');
     res.json(locations);
   } catch (err: any) {

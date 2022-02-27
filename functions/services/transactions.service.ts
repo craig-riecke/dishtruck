@@ -22,13 +22,19 @@ export class TransactionsService {
     qty: number,
     from_location_id: number
   ) {
-    // Lookup from_location_id to make sure it's a valid affiliate
+    // Lookup from_location_id to make sure it's a valid food vendor
     const location = await LocationsService.locationbyId(
       pgPool,
       from_location_id
     );
-    if (!location || location.type !== 'affiliate') {
-      throw new Error(`${from_location_id} is not a valid affiliate location`);
+    if (
+      !location ||
+      location.type !== 'food-vendor' ||
+      location.requires_sub_location
+    ) {
+      throw new Error(
+        `${from_location_id} is not a valid food vendor location`
+      );
     }
 
     // Don't allow ridiculous qtys
@@ -36,33 +42,44 @@ export class TransactionsService {
       throw new Error(`Can only check out from 1-10 containers at a time`);
     }
 
-    // And don't allow them to check out more than the affiliate has - not sure if this is OK
-    // TODO: Don't assume it's plastic
-    if (qty > location.qty_plastic) {
+    // And don't allow them to check out more than the food vendor has - not sure if this is OK
+    const qtyField = `qty_${location.default_container_type}`;
+    if (qty > location[qtyField]) {
       throw new Error(
-        'You cannot get more dishes than the affiliate has on hand'
+        'You cannot get more dishes than the food vendor has on hand'
       );
     }
+    const qtyPlastic = qtyField === 'qty_plastic' ? qty : 0;
+    const qtyMetal = qtyField === 'qty_metal' ? qty : 0;
 
     // TODO: Get member location id from authentication
-    const to_location_id = 5;
+    const to_location_id = 8;
 
     const client: PoolClient = await pgPool.connect();
     try {
       await client.query('BEGIN');
-      // TODO: Don't assume it's plastic.  Get from affiliate record, maybe
-      const insertTransactionSQL =
-        'INSERT INTO transactions(type, from_location_id, to_location_id, qty_plastic) VALUES ($1,$2,$3,$4)';
+      const insertTransactionSQL = `INSERT INTO transactions(type, from_location_id, to_location_id, qty_plastic, qty_metal) VALUES ($1,$2,$3,$4,$5)`;
       await client.query(insertTransactionSQL, [
-        'affiliate_to_user',
+        'food_vendor_to_user',
         from_location_id,
         to_location_id,
-        qty,
+        qtyPlastic,
+        qtyMetal,
       ]);
 
       // Adjust inventory totals on each side
-      await this.adjustLocationQty(client, from_location_id, 0, -qty);
-      await this.adjustLocationQty(client, to_location_id, 0, qty);
+      await this.adjustLocationQty(
+        client,
+        from_location_id,
+        -qtyMetal,
+        -qtyPlastic
+      );
+      await this.adjustLocationQty(
+        client,
+        to_location_id,
+        qtyMetal,
+        qtyPlastic
+      );
 
       // And finish
       await client.query('COMMIT');
@@ -100,7 +117,7 @@ export class TransactionsService {
     }
 
     // TODO: Get member location id from authentication
-    const from_location_id = 5;
+    const from_location_id = 8;
 
     // And don't allow them to return more than they have
     const member = await LocationsService.locationbyId(

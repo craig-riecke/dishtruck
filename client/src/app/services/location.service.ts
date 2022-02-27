@@ -4,12 +4,14 @@ import { environment } from 'src/environments/environment';
 
 export interface DishtruckLocation {
   id: number;
-  type: 'member' | 'affiliate' | 'dropoff-point';
+  type: 'member' | 'food-vendor' | 'dropoff-point';
   unique_id?: number;
   full_name: string;
   qty_metal: number;
   qty_plastic: number;
   creation_date: Date;
+  requires_sub_location: boolean;
+  default_container_type: string;
 }
 
 @Injectable({
@@ -24,15 +26,21 @@ export class LocationService {
     );
   }
 
-  getAffiliates() {
+  getFoodVendors() {
     return this.http.get<DishtruckLocation[]>(
-      `${environment.DISHTRUCK_API_BASE_URL}/locations/affiliate`
+      `${environment.DISHTRUCK_API_BASE_URL}/locations/food-vendor`
     );
   }
 
   getDropoffPoints() {
     return this.http.get<DishtruckLocation[]>(
       `${environment.DISHTRUCK_API_BASE_URL}/locations/dropoff-point`
+    );
+  }
+
+  getSubLocations(parent_location_id: number) {
+    return this.http.get<DishtruckLocation[]>(
+      `${environment.DISHTRUCK_API_BASE_URL}/locations/sublocations?parent_location_id=${parent_location_id}`
     );
   }
 }

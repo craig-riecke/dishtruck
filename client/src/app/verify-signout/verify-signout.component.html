@@ -4,17 +4,19 @@
   <h1>You're Ready!</h1>
 
   <p>
-    Show this device to the affiliate and they'll give you your
+    Show this device to the food vendor and they'll give you your
     containers...ready for eatin'
   </p>
 
   <mat-divider></mat-divider>
 
-  <h2>This Dishtruck Member is authorized for</h2>
+  <h2>This Dish Truck Member is authorized for</h2>
 
   <h1>
-    {{ verifyDetails.qty }} containers from {{ verifyDetails.affiliate_name }}
+    {{ verifyDetails.qty }} containers from {{ verifyDetails.food_vendor_name }}
   </h1>
+
+  <h2>at {{ verifyDetails.timestamp | date: "medium" }}</h2>
 
   <a mat-raised-button [routerLink]="'/home'">Back to The Home Screen</a>
 </div>

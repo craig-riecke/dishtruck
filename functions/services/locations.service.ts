@@ -11,16 +11,25 @@ export class LocationsService {
   public static async locationsWithType(pgPool: Pool, type: string) {
     if (type === 'me') {
       // TODO: Derive member number from authn.
-      return await this.locationbyId(pgPool, 5);
+      return await this.locationbyId(pgPool, 8);
     }
-    if (!['affiliate', 'dropoff-point'].includes(type)) {
+    if (!['food-vendor', 'dropoff-point'].includes(type)) {
       throw new Error(
-        'Cannot ask for locations other than affiliate or dropoff-point'
+        'Cannot ask for locations other than food-vendor or dropoff-point'
       );
     }
-    const recs = await pgPool.query('SELECT * FROM locations WHERE type=$1', [
-      type,
-    ]);
+    const recs = await pgPool.query(
+      'SELECT * FROM locations WHERE type=$1 AND COALESCE(parent_location_id,0) = 0',
+      [type]
+    );
+    return recs.rows;
+  }
+
+  public static async sublocations(pgPool: Pool, parent_location_id: number) {
+    const recs = await pgPool.query(
+      "SELECT * FROM locations WHERE type='food-vendor' AND parent_location_id = $1",
+      [parent_location_id]
+    );
     return recs.rows;
   }
 }
