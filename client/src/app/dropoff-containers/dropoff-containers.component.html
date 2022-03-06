@@ -3,7 +3,7 @@
 
   <h1>Return Containers</h1>
 
-  <form [formGroup]="dropoffForm" (submit)="saveSignout()">
+  <form [formGroup]="dropoffForm" (submit)="saveDropoff()">
     <p>How many plastic containers are you returning?</p>
 
     <mat-chip-list formControlName="qty_plastic" [selectable]="true">

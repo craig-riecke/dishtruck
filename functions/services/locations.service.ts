@@ -8,10 +8,28 @@ export class LocationsService {
     return recs.rows[0] || null;
   }
 
-  public static async locationsWithType(pgPool: Pool, type: string) {
+  public static async locationByName(pgPool: Pool, type: string, name: string) {
+    const recs = await pgPool.query(
+      'SELECT * FROM locations WHERE type=$1 AND full_name=$2',
+      [type, name]
+    );
+    return recs.rows[0] || null;
+  }
+
+  public static async locationsWithType(
+    pgPool: Pool,
+    type: string,
+    userId: string
+  ) {
     if (type === 'me') {
-      // TODO: Derive member number from authn.
-      return await this.locationbyId(pgPool, 8);
+      const userRec = await this.locationByName(pgPool, 'member', userId);
+      if (userRec) {
+        return userRec;
+      } else {
+        return {
+          type: 'unknown-member',
+        };
+      }
     }
     if (!['food-vendor', 'dropoff-point'].includes(type)) {
       throw new Error(
@@ -31,5 +49,14 @@ export class LocationsService {
       [parent_location_id]
     );
     return recs.rows;
+  }
+
+  public static async registerMe(pgPool: Pool, userId: string) {
+    // Make sure member doesn't already exist.  If so, then no-op
+    const userRec = await this.locationByName(pgPool, 'member', userId);
+    if (!userRec) {
+      const insertTransactionSQL = `INSERT INTO locations(type, full_name, qty_metal, qty_plastic) VALUES ('member', $1, 0, 0)`;
+      await pgPool.query(insertTransactionSQL, [userId]);
+    }
   }
 }

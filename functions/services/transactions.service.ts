@@ -19,6 +19,7 @@ export class TransactionsService {
 
   public static async checkoutContainer(
     pgPool: Pool,
+    userId: string,
     qty: number,
     from_location_id: number
   ) {
@@ -52,15 +53,19 @@ export class TransactionsService {
     const qtyPlastic = qtyField === 'qty_plastic' ? qty : 0;
     const qtyMetal = qtyField === 'qty_metal' ? qty : 0;
 
-    // TODO: Get member location id from authentication
-    const to_location_id = 8;
+    const userRec = await LocationsService.locationByName(
+      pgPool,
+      'member',
+      userId
+    );
+    const to_location_id = userRec.id;
 
     const client: PoolClient = await pgPool.connect();
     try {
       await client.query('BEGIN');
       const insertTransactionSQL = `INSERT INTO transactions(type, from_location_id, to_location_id, qty_plastic, qty_metal) VALUES ($1,$2,$3,$4,$5)`;
       await client.query(insertTransactionSQL, [
-        'food_vendor_to_user',
+        'food_vendor_to_member',
         from_location_id,
         to_location_id,
         qtyPlastic,
@@ -93,6 +98,7 @@ export class TransactionsService {
 
   public static async returnContainer(
     pgPool: Pool,
+    userId: string,
     qty_metal: number,
     qty_plastic: number,
     to_location_id: number
@@ -116,8 +122,12 @@ export class TransactionsService {
       throw new Error(`Can only dropoff from 1-50 containers at a time`);
     }
 
-    // TODO: Get member location id from authentication
-    const from_location_id = 8;
+    const userRec = await LocationsService.locationByName(
+      pgPool,
+      'member',
+      userId
+    );
+    const from_location_id = userRec.id;
 
     // And don't allow them to return more than they have
     const member = await LocationsService.locationbyId(
@@ -134,7 +144,7 @@ export class TransactionsService {
       const insertTransactionSQL =
         'INSERT INTO transactions(type, from_location_id, to_location_id, qty_metal, qty_plastic) VALUES ($1,$2,$3,$4,$5)';
       await client.query(insertTransactionSQL, [
-        'user_to_dropoff',
+        'member_to_dropoff',
         from_location_id,
         to_location_id,
         qty_metal,

@@ -73,7 +73,7 @@ export class DropoffContainersComponent implements OnInit, OnDestroy {
     this.dropoffForm.controls['qty_metal'].setValue(newQty);
   }
 
-  saveSignout() {
+  saveDropoff() {
     if (!this.dropoffPoint) {
       alert('You are not at a valid dropoff point');
       return;

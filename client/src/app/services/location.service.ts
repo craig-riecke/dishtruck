@@ -4,7 +4,7 @@ import { environment } from 'src/environments/environment';
 
 export interface DishtruckLocation {
   id: number;
-  type: 'member' | 'food-vendor' | 'dropoff-point';
+  type: 'member' | 'food-vendor' | 'dropoff-point' | 'unknown-member';
   unique_id?: number;
   full_name: string;
   qty_metal: number;
@@ -23,6 +23,13 @@ export class LocationService {
   getMyMemberRecord() {
     return this.http.get<DishtruckLocation>(
       `${environment.DISHTRUCK_API_BASE_URL}/locations/me`
+    );
+  }
+
+  registerMe() {
+    return this.http.post<DishtruckLocation>(
+      `${environment.DISHTRUCK_API_BASE_URL}/locations/register-me`,
+      {} // Don't need anything - all of what we need is in the token
     );
   }
 

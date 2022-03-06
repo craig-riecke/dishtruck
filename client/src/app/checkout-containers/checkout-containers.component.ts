@@ -11,10 +11,10 @@ import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-signout-containers',
-  templateUrl: './signout-containers.component.html',
-  styleUrls: ['./signout-containers.component.scss'],
+  templateUrl: './checkout-containers.component.html',
+  styleUrls: ['./checkout-containers.component.scss'],
 })
-export class SignoutContainersComponent implements OnInit, OnDestroy {
+export class CheckoutContainersComponent implements OnInit, OnDestroy {
   foodVendors$: Observable<DishtruckLocation[]>;
   containerNumbers = range(1, 10);
   signoutForm = new FormGroup({
@@ -59,11 +59,11 @@ export class SignoutContainersComponent implements OnInit, OnDestroy {
     this.signoutForm.controls['qty'].setValue(newQty);
   }
 
-  saveSignout() {
+  saveCheckout() {
     this.saving = true;
     this.saveSubscription = this.transactionService
-      .signoutContainers(this.signoutForm.value, this.selectedfoodVendorName)
-      .subscribe(() => this.router.navigate(['verify-signout']));
+      .checkoutContainers(this.signoutForm.value, this.selectedfoodVendorName)
+      .subscribe(() => this.router.navigate(['verify-checkout']));
   }
 
   ngOnDestroy(): void {

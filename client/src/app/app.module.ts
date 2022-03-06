@@ -10,9 +10,9 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { HttpClientModule } from '@angular/common/http';
-import { SignoutContainersComponent } from './signout-containers/signout-containers.component';
+import { CheckoutContainersComponent } from './checkout-containers/checkout-containers.component';
 import { ReactiveFormsModule } from '@angular/forms';
-import { VerifySignoutComponent } from './verify-signout/verify-signout.component';
+import { VerifyCheckoutComponent } from './verify-checkout/verify-checkout.component';
 import { DropoffContainersComponent } from './dropoff-containers/dropoff-containers.component';
 import { FindDropoffComponent } from './find-dropoff/find-dropoff.component';
 import { ServiceWorkerModule } from '@angular/service-worker';
@@ -20,16 +20,19 @@ import { environment } from '../environments/environment';
 import { GoogleLoginProvider, SocialLoginModule } from 'angularx-social-login';
 import { AuthGuard } from './auth.guard';
 import { LoginComponent } from './login/login.component';
+import { customInterceptorProviders } from './custom-interceptors/index';
+import { BecomeAMemberComponent } from './become-a-member/become-a-member.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     HomeComponent,
-    SignoutContainersComponent,
-    VerifySignoutComponent,
+    CheckoutContainersComponent,
+    VerifyCheckoutComponent,
     DropoffContainersComponent,
     FindDropoffComponent,
     LoginComponent,
+    BecomeAMemberComponent,
   ],
   imports: [
     BrowserModule,
@@ -65,6 +68,7 @@ import { LoginComponent } from './login/login.component';
       },
     },
     AuthGuard,
+    customInterceptorProviders,
   ],
   bootstrap: [AppComponent],
 })

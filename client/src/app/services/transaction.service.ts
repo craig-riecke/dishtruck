@@ -28,7 +28,7 @@ export class TransactionService {
 
   constructor(private http: HttpClient) {}
 
-  signoutContainers(
+  checkoutContainers(
     checkoutContainerAction: CheckoutContainerAction,
     food_vendor_name: string
   ) {

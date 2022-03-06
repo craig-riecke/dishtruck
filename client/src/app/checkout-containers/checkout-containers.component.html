@@ -3,7 +3,7 @@
 
   <h1>Signout Containers</h1>
 
-  <form [formGroup]="signoutForm" (submit)="saveSignout()">
+  <form [formGroup]="signoutForm" (submit)="saveCheckout()">
     <p>Where are picking up your order?</p>
 
     <mat-chip-list formControlName="from_location_id" [selectable]="true">

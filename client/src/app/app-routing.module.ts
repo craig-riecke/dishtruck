@@ -5,13 +5,20 @@ import { DropoffContainersComponent } from './dropoff-containers/dropoff-contain
 import { FindDropoffComponent } from './find-dropoff/find-dropoff.component';
 import { HomeComponent } from './home/home.component';
 import { LoginComponent } from './login/login.component';
-import { SignoutContainersComponent } from './signout-containers/signout-containers.component';
-import { VerifySignoutComponent } from './verify-signout/verify-signout.component';
+import { CheckoutContainersComponent } from './checkout-containers/checkout-containers.component';
+import { VerifyCheckoutComponent } from './verify-checkout/verify-checkout.component';
+import { BecomeAMemberComponent } from './become-a-member/become-a-member.component';
 
 const routes: Routes = [
   {
+    path: 'become-a-member',
+    component: BecomeAMemberComponent,
+    canActivate: [AuthGuard],
+  },
+  {
     path: 'dropoff-containers/:to_location_id',
     component: DropoffContainersComponent,
+    canActivate: [AuthGuard],
   },
   {
     path: 'find-dropoff',
@@ -21,13 +28,13 @@ const routes: Routes = [
   { path: 'home', component: HomeComponent, canActivate: [AuthGuard] },
   { path: 'login', component: LoginComponent },
   {
-    path: 'signout-containers',
-    component: SignoutContainersComponent,
+    path: 'checkout-containers',
+    component: CheckoutContainersComponent,
     canActivate: [AuthGuard],
   },
   {
-    path: 'verify-signout',
-    component: VerifySignoutComponent,
+    path: 'verify-checkout',
+    component: VerifyCheckoutComponent,
     canActivate: [AuthGuard],
   },
   { path: '**', component: LoginComponent },
