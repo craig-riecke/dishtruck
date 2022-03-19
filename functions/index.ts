@@ -33,12 +33,16 @@ let pgPool: Pool;
 
 const jwtPrincipal = async (authHeader: string) => {
   const jwToken = authHeader.split(/ /)[1];
-  // return jwt.decode(jwToken);
+  // We only decode to get the kid in the header.
+  const decodedToken: jwt.Jwt | null = jwt.decode(jwToken, { complete: true });
+  if (!decodedToken) {
+    throw new Error('Could not decode JWT');
+  }
   var client = jwksClient({
     jwksUri: 'https://www.googleapis.com/oauth2/v3/certs',
   });
-  // Specific to Google
-  const kid = '3dd6ca2a81dc2fea8c3642431e7e296d2d75b446';
+
+  const kid = decodedToken.header.kid;
   const key = await client.getSigningKey(kid);
   const signingKey = key.getPublicKey();
 
@@ -50,17 +54,28 @@ const jwtPrincipal = async (authHeader: string) => {
   }
 };
 
+const isCorsPreflight = (req: any, res: any): boolean => {
+  res.set('Access-Control-Allow-Origin', '*');
+
+  if (req.method === 'OPTIONS') {
+    // Send response to OPTIONS requests
+    res.set('Access-Control-Allow-Methods', 'GET,POST');
+    res.set('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+    res.set('Access-Control-Max-Age', '3600');
+    res.status(204).send('');
+    return true;
+  }
+  return false;
+};
+
+const extractSubject = (req: any) => {
+  const params = req.path.split('/');
+  return params[params.length - 1];
+};
+
 export const locations: HttpFunction = async (req: any, res) => {
   try {
-    // Handle CORS for now.
-    res.set('Access-Control-Allow-Origin', '*');
-
-    if (req.method === 'OPTIONS') {
-      // Send response to OPTIONS requests
-      res.set('Access-Control-Allow-Methods', 'GET,POST');
-      res.set('Access-Control-Allow-Headers', 'Content-Type,Authorization');
-      res.set('Access-Control-Max-Age', '3600');
-      res.status(204).send('');
+    if (isCorsPreflight(req, res)) {
       return;
     }
 
@@ -69,9 +84,7 @@ export const locations: HttpFunction = async (req: any, res) => {
     const thisUserId = thisUser.email;
     console.log(JSON.stringify(thisUser));
 
-    // This is not cool, but
-    const params = req.path.split('/');
-    const type = params[params.length - 1];
+    const type = extractSubject(req);
     console.log(`Looking for type ${type}`);
 
     console.log('Checking for Postgres pool');
@@ -107,15 +120,7 @@ export const locations: HttpFunction = async (req: any, res) => {
 
 export const transactions: HttpFunction = async (req: any, res) => {
   try {
-    // Handle CORS for now.
-    res.set('Access-Control-Allow-Origin', '*');
-
-    if (req.method === 'OPTIONS') {
-      // Send response to OPTIONS requests
-      res.set('Access-Control-Allow-Methods', 'GET,POST');
-      res.set('Access-Control-Allow-Headers', 'Content-Type,Authorization');
-      res.set('Access-Control-Max-Age', '3600');
-      res.status(204).send('');
+    if (isCorsPreflight(req, res)) {
       return;
     }
 
@@ -125,8 +130,7 @@ export const transactions: HttpFunction = async (req: any, res) => {
     if (req.method !== 'POST') {
       throw new Error('Must post transaction here');
     }
-    const params = req.path.split('/');
-    const type = params[params.length - 1];
+    const type = extractSubject(req);
     console.log(`Transcation type ${type}`);
 
     console.log('Checking for Postgres pool');
@@ -159,7 +163,64 @@ export const transactions: HttpFunction = async (req: any, res) => {
         break;
     }
     console.log('Trx ended');
-    res.json(locations);
+    res.json(null);
+  } catch (err: any) {
+    const wrappedError = new Error(err);
+    console.error(`${err.stack}\n${wrappedError.stack}`);
+    res.status(500).json({ error: 'An error occurred in that transaction' });
+  }
+};
+
+export const admin: HttpFunction = async (req: any, res) => {
+  try {
+    if (isCorsPreflight(req, res)) {
+      return;
+    }
+
+    const thisUser: any = await jwtPrincipal(req.headers.authorization);
+    const thisUserId = thisUser.email;
+
+    // TODO: Allow other admins based on locations type="admin"
+    if (thisUserId !== 'craig.riecke@gmail.com') {
+      res
+        .status(403)
+        .json({ error: 'You are not auuthorized to use this API' });
+    }
+
+    const type = extractSubject(req);
+    console.log(`Transcation type ${type}`);
+
+    console.log('Checking for Postgres pool');
+    if (!pgPool) {
+      console.log('Starting up Postgres Pool');
+      pgPool = await createUnixSocketPool({});
+      console.log('Postgres Pool Started');
+    }
+
+    console.log('Running trx');
+
+    switch (req.method) {
+      case 'GET':
+        const trx = await TransactionsService.getHistory(
+          pgPool,
+          req.query.location_id,
+          req.query.from,
+          req.query.to
+        );
+        res.json(trx);
+        break;
+      case 'POST':
+        await TransactionsService.adminTransaction(
+          pgPool,
+          req.body.from_location_id,
+          req.body.to_location_id,
+          req.body.qty_metal,
+          req.body.qty_plastic
+        );
+        res.status(204);
+        break;
+    }
+    console.log('Trx ended');
   } catch (err: any) {
     const wrappedError = new Error(err);
     console.error(`${err.stack}\n${wrappedError.stack}`);

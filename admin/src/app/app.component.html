@@ -1,0 +1,83 @@
+<mat-toolbar
+  color="primary"
+  class="top-toolbar"
+  *ngIf="(isHandset$ | async) === false"
+>
+  <mat-toolbar-row>
+    <span
+      ><img src="assets/dish-truck-logo-small.jpeg" style="height: 75px"
+    /></span>
+    <span class="toolbar-spacer"></span>
+    <a mat-button href="https://dishtruck.tofuna.com">DISH TRUCK FOR MEMBERS</a>
+  </mat-toolbar-row>
+</mat-toolbar>
+
+<mat-sidenav-container class="sidenav-container">
+  <mat-sidenav
+    #drawer
+    class="sidenav"
+    fixedInViewport="false"
+    [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
+    [mode]="(isHandset$ | async) ? 'over' : 'side'"
+    [opened]="(isHandset$ | async) === false"
+  >
+    <mat-toolbar>Menu</mat-toolbar>
+    <mat-nav-list>
+      <a mat-list-item routerLinkActive="active" routerLink="/"
+        ><mat-icon>dashboard</mat-icon>Home</a
+      >
+      <mat-divider></mat-divider>
+      <a mat-list-item routerLinkActive="active" routerLink="/location/17"
+        ><mat-icon>warehouse</mat-icon>Warehouse</a
+      >
+      <mat-divider></mat-divider>
+      <div class="tool-category">
+        <mat-icon>restaurant</mat-icon>FOOD VENDORS
+      </div>
+      <a mat-list-item routerLinkActive="active" routerLink="/location/2"
+        >Grassroots #1</a
+      >
+      <a mat-list-item routerLinkActive="active" routerLink="/location/3"
+        >Grassroots #2</a
+      >
+      <a mat-list-item routerLinkActive="active" routerLink="/location/4"
+        >Grassroots #3</a
+      >
+      <a mat-list-item routerLinkActive="active" routerLink="/location/5"
+        >Greenstar</a
+      >
+      <mat-divider></mat-divider>
+      <div class="tool-category">
+        <mat-icon>recycling</mat-icon>DROPOFF POINTS
+      </div>
+      <a mat-list-item routerLinkActive="active" routerLink="/location/6"
+        >Ithaca Re-Use Center</a
+      >
+      <a mat-list-item routerLinkActive="active" routerLink="/location/7"
+        >Gorges Cycles</a
+      >
+      <mat-divider></mat-divider>
+      <a mat-list-item routerLinkActive="active" routerLink="/location/18"
+        ><mat-icon>inventory_2</mat-icon>Shrinkage</a
+      >
+    </mat-nav-list>
+  </mat-sidenav>
+  <mat-sidenav-content>
+    <mat-toolbar color="primary" class="app-title-bar">
+      <button
+        type="button"
+        aria-label="Toggle sidenav"
+        mat-icon-button
+        (click)="drawer.toggle()"
+        *ngIf="isHandset$ | async"
+      >
+        <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
+      </button>
+      <span>Dish Truck Admin</span>
+      <span class="toolbar-spacer"></span>
+    </mat-toolbar>
+    <div class="padded-panel">
+      <router-outlet></router-outlet>
+    </div>
+  </mat-sidenav-content>
+</mat-sidenav-container>

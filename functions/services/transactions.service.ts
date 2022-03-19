@@ -1,6 +1,26 @@
 import { Pool, PoolClient } from 'pg';
 import { LocationsService } from './locations.service';
 
+export interface Balance {
+  qty_plastic: number;
+  qty_metal: number;
+}
+
+export interface Transaction {
+  event_timestamp: Date;
+  location_id: number;
+  location_name: string;
+  qty_plastic: number;
+  qty_metal: number;
+}
+
+export interface TransactionHistory {
+  balance_forward: Balance;
+  transactions: Transaction[];
+  balance_at_end: Balance;
+  current_balance: Balance;
+}
+
 export class TransactionsService {
   private static async adjustLocationQty(
     client: PoolClient,
@@ -15,6 +35,51 @@ export class TransactionsService {
       qty_plastic,
       location_id,
     ]);
+  }
+
+  private static async inventoryTransaction(
+    pgPool: Pool,
+    type: string,
+    from_location_id: number,
+    to_location_id: number,
+    qty_metal: number,
+    qty_plastic: number
+  ) {
+    const client: PoolClient = await pgPool.connect();
+    try {
+      await client.query('BEGIN');
+      const insertTransactionSQL =
+        'INSERT INTO transactions(type, from_location_id, to_location_id, qty_metal, qty_plastic) VALUES ($1,$2,$3,$4,$5)';
+      await client.query(insertTransactionSQL, [
+        type,
+        from_location_id,
+        to_location_id,
+        qty_metal,
+        qty_plastic,
+      ]);
+
+      // Adjust inventory totals on each side
+      await this.adjustLocationQty(
+        client,
+        from_location_id,
+        -qty_metal,
+        -qty_plastic
+      );
+      await this.adjustLocationQty(
+        client,
+        to_location_id,
+        qty_metal,
+        qty_plastic
+      );
+
+      // And finish
+      await client.query('COMMIT');
+    } catch (e) {
+      await client.query('ROLLBACK');
+      throw e;
+    } finally {
+      client.release();
+    }
   }
 
   public static async checkoutContainer(
@@ -50,8 +115,8 @@ export class TransactionsService {
         'You cannot get more dishes than the food vendor has on hand'
       );
     }
-    const qtyPlastic = qtyField === 'qty_plastic' ? qty : 0;
-    const qtyMetal = qtyField === 'qty_metal' ? qty : 0;
+    const qty_plastic = qtyField === 'qty_plastic' ? qty : 0;
+    const qty_metal = qtyField === 'qty_metal' ? qty : 0;
 
     const userRec = await LocationsService.locationByName(
       pgPool,
@@ -60,40 +125,14 @@ export class TransactionsService {
     );
     const to_location_id = userRec.id;
 
-    const client: PoolClient = await pgPool.connect();
-    try {
-      await client.query('BEGIN');
-      const insertTransactionSQL = `INSERT INTO transactions(type, from_location_id, to_location_id, qty_plastic, qty_metal) VALUES ($1,$2,$3,$4,$5)`;
-      await client.query(insertTransactionSQL, [
-        'food_vendor_to_member',
-        from_location_id,
-        to_location_id,
-        qtyPlastic,
-        qtyMetal,
-      ]);
-
-      // Adjust inventory totals on each side
-      await this.adjustLocationQty(
-        client,
-        from_location_id,
-        -qtyMetal,
-        -qtyPlastic
-      );
-      await this.adjustLocationQty(
-        client,
-        to_location_id,
-        qtyMetal,
-        qtyPlastic
-      );
-
-      // And finish
-      await client.query('COMMIT');
-    } catch (e) {
-      await client.query('ROLLBACK');
-      throw e;
-    } finally {
-      client.release();
-    }
+    await this.inventoryTransaction(
+      pgPool,
+      'food-vendor_to_member',
+      from_location_id,
+      to_location_id,
+      qty_metal,
+      qty_plastic
+    );
   }
 
   public static async returnContainer(
@@ -138,40 +177,157 @@ export class TransactionsService {
       throw new Error('You cannot return more dishes than you have');
     }
 
-    const client: PoolClient = await pgPool.connect();
-    try {
-      await client.query('BEGIN');
-      const insertTransactionSQL =
-        'INSERT INTO transactions(type, from_location_id, to_location_id, qty_metal, qty_plastic) VALUES ($1,$2,$3,$4,$5)';
-      await client.query(insertTransactionSQL, [
-        'member_to_dropoff',
-        from_location_id,
-        to_location_id,
-        qty_metal,
-        qty_plastic,
-      ]);
+    await this.inventoryTransaction(
+      pgPool,
+      'member_to_dropoff-point',
+      from_location_id,
+      to_location_id,
+      qty_metal,
+      qty_plastic
+    );
+  }
 
-      // Adjust inventory totals on each side
-      await this.adjustLocationQty(
-        client,
-        from_location_id,
-        -qty_metal,
-        -qty_plastic
-      );
-      await this.adjustLocationQty(
-        client,
-        to_location_id,
-        qty_metal,
-        qty_plastic
-      );
+  private static async computedBalance(
+    pgPool: Pool,
+    location_id: number,
+    from: Date,
+    to: Date
+  ): Promise<Balance> {
+    const sql = `
+      WITH
+        all_trx AS (
+          SELECT
+            event_timestamp,
+            -qty_metal AS qm,
+            -qty_plastic AS qp
+          FROM
+            transactions
+          WHERE from_location_id = $1
+          UNION ALL
+          SELECT
+            event_timestamp,
+            qty_metal AS qm,
+            qty_plastic AS qp
+          FROM
+            transactions
+          WHERE to_location_id = $1
+        )
+      SELECT
+        SUM(qm) AS qty_metal,
+        SUM(qp) AS qty_plastic
+      FROM
+        all_trx
+      WHERE
+        event_timestamp BETWEEN $2 AND $3
+    `;
+    const recs = await pgPool.query(sql, [location_id, from, to]);
+    return recs.rows[0] || null;
+  }
 
-      // And finish
-      await client.query('COMMIT');
-    } catch (e) {
-      await client.query('ROLLBACK');
-      throw e;
-    } finally {
-      client.release();
-    }
+  private static async computedTransactions(
+    pgPool: Pool,
+    location_id: number,
+    from: Date,
+    to: Date
+  ): Promise<Transaction[]> {
+    const sql = `
+      WITH
+        all_trx AS (
+          SELECT
+            event_timestamp,
+            to_location_id as location_id,
+            -qty_metal AS qm,
+            -qty_plastic AS qp
+          FROM
+            transactions
+          WHERE from_location_id = $1
+          UNION ALL
+          SELECT
+            event_timestamp,
+            from_location_id as location_id,
+            qty_metal AS qm,
+            qty_plastic AS qp
+          FROM
+            transactions
+          WHERE to_location_id = $1
+        )
+      SELECT
+        t.event_timestamp,
+        t.location_id,
+        loc.full_name as location_name,
+        t.qm as qty_metal,
+        t.qp as qty_plastic
+      FROM
+        all_trx t
+        INNER JOIN locations loc ON t.location_id = loc.id
+      WHERE
+        event_timestamp BETWEEN $2 AND $3
+      ORDER BY
+        event_timestamp;
+      `;
+    const recs = await pgPool.query(sql, [location_id, from, to]);
+    return recs.rows;
+  }
+
+  public static async getHistory(
+    pgPool: Pool,
+    location_id: number,
+    from: Date,
+    to: Date
+  ): Promise<TransactionHistory> {
+    const balance_forward = await this.computedBalance(
+      pgPool,
+      location_id,
+      new Date('1970-01-01'),
+      from
+    );
+    const transactions = await this.computedTransactions(
+      pgPool,
+      location_id,
+      from,
+      to
+    );
+    const balance_at_end = await this.computedBalance(
+      pgPool,
+      location_id,
+      new Date('1970-01-01'),
+      to
+    );
+    const location = await LocationsService.locationbyId(pgPool, location_id);
+    const current_balance = {
+      qty_metal: location.qty_metal,
+      qty_plastic: location.qty_plastic,
+    };
+    return { balance_forward, transactions, balance_at_end, current_balance };
+  }
+
+  public static async adminTransaction(
+    pgPool: Pool,
+    from_location_id: number,
+    to_location_id: number,
+    qty_metal: number,
+    qty_plastic: number
+  ) {
+    // We compute the type by looking up the locations
+    const fromLocation = await LocationsService.locationbyId(
+      pgPool,
+      from_location_id
+    );
+    const fromLocationType = fromLocation.type;
+    const toLocation = await LocationsService.locationbyId(
+      pgPool,
+      to_location_id
+    );
+    const toLocationType = toLocation.type;
+    const type = `${fromLocationType}_to_${toLocationType}`;
+
+    await this.inventoryTransaction(
+      pgPool,
+      type,
+      from_location_id,
+      to_location_id,
+      qty_metal,
+      qty_plastic
+    );
   }
 }

@@ -1,0 +1,92 @@
+<h1>Location #7</h1>
+
+<ng-container *ngIf="dataSource$ | async as dataSource">
+  <table mat-table #table [dataSource]="dataSource.transactions">
+    <ng-container matColumnDef="direction">
+      <th mat-header-cell *matHeaderCellDef></th>
+      <td mat-cell *matCellDef="let row">
+        <ng-container *ngIf="row.location_name !== 'BALANCE FORWARD'">
+          <mat-icon *ngIf="row.qty_plastic < 0 || row.qty_metal < 0"
+            >east</mat-icon
+          >
+          <mat-icon *ngIf="row.qty_plastic > 0 || row.qty_metal > 0"
+            >west</mat-icon
+          >
+        </ng-container>
+      </td>
+      <th mat-footer-cell *matFooterCellDef>&nbsp;</th>
+    </ng-container>
+    <ng-container matColumnDef="location">
+      <th mat-header-cell *matHeaderCellDef>Location</th>
+      <td mat-cell *matCellDef="let row">
+        {{ row.location_name }}
+      </td>
+      <td mat-footer-cell *matFooterCellDef><strong>ENDING BALANCE</strong></td>
+    </ng-container>
+    <ng-container matColumnDef="qty_metal">
+      <th mat-header-cell *matHeaderCellDef>Qty Metal</th>
+      <td mat-cell *matCellDef="let row">{{ row.qty_metal }}</td>
+      <td mat-footer-cell *matFooterCellDef>
+        {{ dataSource.balance_at_end.qty_metal }}
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="qty_plastic">
+      <th mat-header-cell *matHeaderCellDef>Qty Plastic</th>
+      <td mat-cell *matCellDef="let row">{{ row.qty_plastic }}</td>
+      <td mat-footer-cell *matFooterCellDef>
+        {{ dataSource.balance_at_end.qty_plastic }}
+      </td>
+    </ng-container>
+
+    <tr
+      mat-header-row
+      *matHeaderRowDef="['direction', 'location', 'qty_metal', 'qty_plastic']"
+    ></tr>
+    <tr
+      mat-row
+      *matRowDef="
+        let row;
+        columns: ['direction', 'location', 'qty_metal', 'qty_plastic']
+      "
+    ></tr>
+    <tr
+      mat-footer-row
+      *matFooterRowDef="['direction', 'location', 'qty_metal', 'qty_plastic']"
+    ></tr>
+  </table>
+
+  <br /><br />
+  <mat-divider></mat-divider>
+  <br /><br />
+
+  <form [formGroup]="moveTrxForm" (ngSubmit)="submitTransaction()">
+    <input type="hidden" formControlName="from_location_id" />
+    <mat-form-field appearance="fill">
+      <mat-label>Qty Plastic</mat-label>
+      <input matInput type="number" formControlName="qty_plastic" />
+    </mat-form-field>
+    <mat-form-field appearance="fill">
+      <mat-label>Qty Metal</mat-label>
+      <input matInput type="number" formControlName="qty_metal" />
+    </mat-form-field>
+    <mat-form-field appearance="fill">
+      <mat-label>To Location</mat-label>
+      <mat-select placeholder="To Location" formControlName="to_location_id">
+        <mat-optgroup
+          *ngFor="let group of nonMemberLocationsGroups | keyvalue"
+          [label]="group.key"
+        >
+          <mat-option
+            *ngFor="let to_location of group.value"
+            [value]="to_location.value"
+          >
+            {{ to_location.viewValue }}
+          </mat-option>
+        </mat-optgroup>
+      </mat-select>
+    </mat-form-field>
+    <button mat-button color="primary" [disabled]="moveTrxForm.invalid">
+      MOVE
+    </button>
+  </form>
+</ng-container>
