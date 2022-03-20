@@ -12,7 +12,10 @@
   </mat-toolbar-row>
 </mat-toolbar>
 
-<mat-sidenav-container class="sidenav-container">
+<mat-sidenav-container
+  class="sidenav-container"
+  *ngIf="locationGroups$ | async as locationGroups"
+>
   <mat-sidenav
     #drawer
     class="sidenav"
@@ -27,37 +30,41 @@
         ><mat-icon>dashboard</mat-icon>Home</a
       >
       <mat-divider></mat-divider>
-      <a mat-list-item routerLinkActive="active" routerLink="/location/17"
+      <a
+        mat-list-item
+        routerLinkActive="active"
+        routerLink="/location/{{ locationGroups[0].locations[0].id }}"
         ><mat-icon>warehouse</mat-icon>Warehouse</a
       >
       <mat-divider></mat-divider>
       <div class="tool-category">
         <mat-icon>restaurant</mat-icon>FOOD VENDORS
       </div>
-      <a mat-list-item routerLinkActive="active" routerLink="/location/2"
-        >Grassroots #1</a
-      >
-      <a mat-list-item routerLinkActive="active" routerLink="/location/3"
-        >Grassroots #2</a
-      >
-      <a mat-list-item routerLinkActive="active" routerLink="/location/4"
-        >Grassroots #3</a
-      >
-      <a mat-list-item routerLinkActive="active" routerLink="/location/5"
-        >Greenstar</a
-      >
+      <ng-container *ngFor="let loc of locationGroups[1].locations">
+        <a
+          mat-list-item
+          routerLinkActive="active"
+          routerLink="/location/{{ loc.id }}"
+          >{{ loc.full_name }}</a
+        >
+      </ng-container>
       <mat-divider></mat-divider>
       <div class="tool-category">
         <mat-icon>recycling</mat-icon>DROPOFF POINTS
       </div>
-      <a mat-list-item routerLinkActive="active" routerLink="/location/6"
-        >Ithaca Re-Use Center</a
-      >
-      <a mat-list-item routerLinkActive="active" routerLink="/location/7"
-        >Gorges Cycles</a
-      >
+      <ng-container *ngFor="let loc of locationGroups[2].locations">
+        <a
+          mat-list-item
+          routerLinkActive="active"
+          routerLink="/location/{{ loc.id }}"
+          >{{ loc.full_name }}</a
+        >
+      </ng-container>
       <mat-divider></mat-divider>
-      <a mat-list-item routerLinkActive="active" routerLink="/location/18"
+      <a
+        mat-list-item
+        routerLinkActive="active"
+        routerLink="/location/{{ locationGroups[3].locations[0].id }}"
         ><mat-icon>inventory_2</mat-icon>Shrinkage</a
       >
     </mat-nav-list>

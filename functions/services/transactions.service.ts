@@ -1,5 +1,6 @@
 import { Pool, PoolClient } from 'pg';
 import { LocationsService } from './locations.service';
+import * as _ from 'lodash';
 
 export interface Balance {
   qty_plastic: number;
@@ -15,10 +16,18 @@ export interface Transaction {
 }
 
 export interface TransactionHistory {
+  location_name: string;
+  location_type: string;
   balance_forward: Balance;
   transactions: Transaction[];
   balance_at_end: Balance;
   current_balance: Balance;
+}
+
+export interface Invoice {
+  location_name: string;
+  transactions: Transaction[];
+  invoice_balance: Balance;
 }
 
 export class TransactionsService {
@@ -269,6 +278,33 @@ export class TransactionsService {
     return recs.rows;
   }
 
+  private static async computedTransactionsToMembers(
+    pgPool: Pool,
+    location_id: number,
+    from: Date,
+    to: Date
+  ): Promise<Transaction[]> {
+    const sql = `
+      SELECT
+        trx.event_timestamp,
+        loc.id as location_id,
+        loc.full_name as location_name,
+        trx.qty_metal,
+        trx.qty_plastic
+      FROM
+        transactions trx
+        INNER JOIN locations loc
+          ON trx.to_location_id = loc.id
+      WHERE trx.from_location_id = $1
+        AND loc.type = 'member'
+        AND trx.event_timestamp BETWEEN $2 AND $3
+      ORDER BY
+        trx.event_timestamp;
+    `;
+    const recs = await pgPool.query(sql, [location_id, from, to]);
+    return recs.rows;
+  }
+
   public static async getHistory(
     pgPool: Pool,
     location_id: number,
@@ -281,7 +317,7 @@ export class TransactionsService {
       new Date('1970-01-01'),
       from
     );
-    const transactions = await this.computedTransactions(
+    let transactions = await this.computedTransactions(
       pgPool,
       location_id,
       from,
@@ -293,12 +329,31 @@ export class TransactionsService {
       new Date('1970-01-01'),
       to
     );
+    // We also add the balance forward as a transaction, which just makes calculations a bit easier
+    transactions = [
+      {
+        event_timestamp: from,
+        location_id: -1,
+        location_name: 'BALANCE FORWARD',
+        ...balance_forward,
+      },
+      ...transactions,
+    ];
     const location = await LocationsService.locationbyId(pgPool, location_id);
     const current_balance = {
       qty_metal: location.qty_metal,
       qty_plastic: location.qty_plastic,
     };
-    return { balance_forward, transactions, balance_at_end, current_balance };
+    const location_name = location.full_name;
+    const location_type = location.type;
+    return {
+      location_name,
+      location_type,
+      balance_forward,
+      transactions,
+      balance_at_end,
+      current_balance,
+    };
   }
 
   public static async adminTransaction(
@@ -329,5 +384,30 @@ export class TransactionsService {
       qty_metal,
       qty_plastic
     );
+  }
+
+  public static async getInvoice(
+    pgPool: Pool,
+    location_id: number,
+    from: Date,
+    to: Date
+  ): Promise<Invoice> {
+    let transactions = await this.computedTransactionsToMembers(
+      pgPool,
+      location_id,
+      from,
+      to
+    );
+    const location = await LocationsService.locationbyId(pgPool, location_id);
+    const invoice_balance = {
+      qty_metal: _.sum(_.map(transactions, 'qty_metal')),
+      qty_plastic: _.sum(_.map(transactions, 'qty_plastic')),
+    };
+    const location_name = location.full_name;
+    return {
+      location_name,
+      transactions,
+      invoice_balance,
+    };
   }
 }

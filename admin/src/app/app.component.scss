@@ -35,3 +35,21 @@
     0 6px 10px 0 rgba(0, 0, 0, 0.14), 0 1px 18px 0 rgba(0, 0, 0, 0.12);
   z-index: 2;
 }
+
+@media print {
+  .sidenav {
+    display: none;
+  }
+  .app-title-bar {
+    display: none;
+  }
+  .sidenav-container {
+    height: auto;
+  }
+  .top-toolbar {
+    display: none;
+  }
+  .mat-sidenav-content {
+    margin-left: 0px !important;
+  }
+}

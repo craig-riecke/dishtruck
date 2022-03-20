@@ -1,0 +1,17 @@
+.outer-container {
+  padding: 10px;
+}
+
+.doc-layout {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.dropoff-point-card {
+  max-width: 400px;
+  margin: 10px;
+}
+
+agm-map {
+  height: 300px;
+}

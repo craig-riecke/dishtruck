@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 import { format } from 'date-fns';
+import { Observable } from 'rxjs';
 
 export interface Balance {
   qty_plastic: number;
@@ -17,6 +18,8 @@ export interface Transaction {
 }
 
 export interface TransactionHistory {
+  location_name: string;
+  location_type: string;
   balance_forward: Balance;
   transactions: Transaction[];
   balance_at_end: Balance;
@@ -30,13 +33,54 @@ export interface MoveTransaction {
   qty_metal: number;
 }
 
+export interface DishtruckLocation {
+  id: number;
+  type:
+    | 'member'
+    | 'food-vendor'
+    | 'dropoff-point'
+    | 'unknown-member'
+    | 'warehouse'
+    | 'shrinkage';
+  unique_id?: number;
+  full_name: string;
+  qty_metal: number;
+  qty_plastic: number;
+  creation_date: Date;
+  requires_sub_location: boolean;
+  parent_location_id: number;
+  default_container_type: string;
+  lat: number;
+  lng: number;
+  street_address: string;
+  city: string;
+  zip: string;
+}
+
+export interface LocationGroup {
+  group: string;
+  locations: DishtruckLocation[];
+  qty_metal: number;
+  qty_plastic: number;
+}
+
+export interface Invoice {
+  location_name: string;
+  transactions: Transaction[];
+  invoice_balance: Balance;
+}
+
 @Injectable({
   providedIn: 'root',
 })
 export class AdminService {
   constructor(private http: HttpClient) {}
 
-  getHistory(location_id: number, from: Date, to: Date) {
+  getHistory(
+    location_id: number,
+    from: Date,
+    to: Date
+  ): Observable<TransactionHistory> {
     return this.http.get<TransactionHistory>(
       `${
         environment.DISHTRUCK_API_BASE_URL
@@ -47,10 +91,33 @@ export class AdminService {
     );
   }
 
-  postTransaction(moveTrx: MoveTransaction) {
+  postTransaction(moveTrx: MoveTransaction): Observable<void> {
     return this.http.post<void>(
       `${environment.DISHTRUCK_API_BASE_URL}/admin/transactions`,
       moveTrx
+    );
+  }
+
+  // This is a public API - you don't need a JWT.
+  getLocationGroups(): Observable<LocationGroup[]> {
+    return this.http.get<LocationGroup[]>(
+      `${environment.DISHTRUCK_API_BASE_URL}/admin/locations`
+    );
+  }
+
+  getLocationGroupsWithQtys(): Observable<LocationGroup[]> {
+    return this.http.get<LocationGroup[]>(
+      `${environment.DISHTRUCK_API_BASE_URL}/admin/locations-with-qtys`
+    );
+  }
+
+  getInvoice(
+    location_id: number,
+    from: string,
+    to: string
+  ): Observable<Invoice> {
+    return this.http.get<Invoice>(
+      `${environment.DISHTRUCK_API_BASE_URL}/admin/invoice?location_id=${location_id}&from=${from}&to=${to}`
     );
   }
 }

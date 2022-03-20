@@ -22,6 +22,10 @@ import { customInterceptorProviders } from './custom-interceptors/index';
 import { HttpClientModule } from '@angular/common/http';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import { InvoiceComponent } from './invoice/invoice.component';
 
 @NgModule({
   declarations: [
@@ -29,6 +33,7 @@ import { MatButtonModule } from '@angular/material/button';
     DashboardComponent,
     LocationComponent,
     LoginComponent,
+    InvoiceComponent,
   ],
   imports: [
     AppRoutingModule,
@@ -36,11 +41,14 @@ import { MatButtonModule } from '@angular/material/button';
     BrowserModule,
     HttpClientModule,
     MatButtonModule,
+    MatCardModule,
+    MatDatepickerModule,
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
     MatListModule,
     MatMenuModule,
+    MatNativeDateModule,
     MatSelectModule,
     MatSidenavModule,
     MatTableModule,

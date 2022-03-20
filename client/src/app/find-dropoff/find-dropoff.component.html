@@ -1,3 +1,32 @@
-<p>Coming soon!</p>
+<div class="outer-container" *ngIf="dropoffPoints$ | async as dropoffPoints">
+  <h1>Dropoff Points</h1>
 
-<a mat-raised-button [routerLink]="'/home'">Back to The Home Screen</a>
+  <div class="doc-layout">
+    <mat-card
+      *ngFor="let dropoffPoint of dropoffPoints"
+      class="dropoff-point-card"
+    >
+      <mat-card-header>
+        <mat-card-title>{{ dropoffPoint.full_name }}</mat-card-title>
+        <mat-card-subtitle
+          >{{ dropoffPoint.street_address }},
+          {{ dropoffPoint.city }}</mat-card-subtitle
+        >
+      </mat-card-header>
+      <mat-card-content>
+        <agm-map
+          [latitude]="dropoffPoint.lat"
+          [longitude]="dropoffPoint.lng"
+          [zoom]="16"
+        >
+          <agm-marker
+            [latitude]="dropoffPoint.lat"
+            [longitude]="dropoffPoint.lng"
+          ></agm-marker>
+        </agm-map>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <a mat-raised-button [routerLink]="'/home'">Back to The Home Screen</a>
+</div>

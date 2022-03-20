@@ -177,19 +177,6 @@ export const admin: HttpFunction = async (req: any, res) => {
       return;
     }
 
-    const thisUser: any = await jwtPrincipal(req.headers.authorization);
-    const thisUserId = thisUser.email;
-
-    // TODO: Allow other admins based on locations type="admin"
-    if (thisUserId !== 'craig.riecke@gmail.com') {
-      res
-        .status(403)
-        .json({ error: 'You are not auuthorized to use this API' });
-    }
-
-    const type = extractSubject(req);
-    console.log(`Transcation type ${type}`);
-
     console.log('Checking for Postgres pool');
     if (!pgPool) {
       console.log('Starting up Postgres Pool');
@@ -197,27 +184,71 @@ export const admin: HttpFunction = async (req: any, res) => {
       console.log('Postgres Pool Started');
     }
 
+    const type = extractSubject(req);
+    console.log(`Transcation type ${type}`);
+
+    // All admin points are locked down except /locations, which is needed for the sidebar
+    if (type !== 'locations') {
+      const thisUser: any = await jwtPrincipal(req.headers.authorization);
+      const thisUserId = thisUser.email;
+
+      const adminRecord = LocationsService.locationByName(
+        pgPool,
+        'admin',
+        thisUserId
+      );
+
+      if (!adminRecord) {
+        res
+          .status(403)
+          .json({ error: 'You are not authorized to use this API' });
+      }
+    }
+
     console.log('Running trx');
 
-    switch (req.method) {
-      case 'GET':
-        const trx = await TransactionsService.getHistory(
+    switch (type) {
+      case 'transactions':
+        switch (req.method) {
+          case 'GET':
+            const trx = await TransactionsService.getHistory(
+              pgPool,
+              req.query.location_id,
+              req.query.from,
+              req.query.to
+            );
+            res.json(trx);
+            break;
+          case 'POST':
+            await TransactionsService.adminTransaction(
+              pgPool,
+              req.body.from_location_id,
+              req.body.to_location_id,
+              req.body.qty_metal,
+              req.body.qty_plastic
+            );
+            res.status(204).send('');
+            break;
+        }
+        break;
+      case 'invoice':
+        const invoice = await TransactionsService.getInvoice(
           pgPool,
           req.query.location_id,
           req.query.from,
           req.query.to
         );
-        res.json(trx);
+        res.json(invoice);
         break;
-      case 'POST':
-        await TransactionsService.adminTransaction(
-          pgPool,
-          req.body.from_location_id,
-          req.body.to_location_id,
-          req.body.qty_metal,
-          req.body.qty_plastic
-        );
-        res.status(204);
+      case 'locations-with-qtys':
+        const locationGroupsWithQtys =
+          await LocationsService.getNonmemberLocationGroupsWithQtys(pgPool);
+        res.json(locationGroupsWithQtys);
+        break;
+      case 'locations':
+        const locationGroups =
+          await LocationsService.getNonmemberLocationGroups(pgPool);
+        res.json(locationGroups);
         break;
     }
     console.log('Trx ended');

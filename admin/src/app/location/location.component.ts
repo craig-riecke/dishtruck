@@ -1,16 +1,15 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
-import { Observable, Subscription } from 'rxjs';
+import { ActivatedRoute, Router } from '@angular/router';
+import { BehaviorSubject, Observable, Subscription } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
-import { AdminService, TransactionHistory } from '../services/admin.service';
-import { groupBy, toInteger } from 'lodash-es';
-
-interface NonMemberLocation {
-  value: number;
-  viewValue: string;
-  grp: string;
-}
+import {
+  AdminService,
+  LocationGroup,
+  TransactionHistory,
+} from '../services/admin.service';
+import { toInteger } from 'lodash-es';
+import { endOfMonth, format, startOfMonth } from 'date-fns';
 
 @Component({
   selector: 'app-location',
@@ -18,31 +17,42 @@ interface NonMemberLocation {
   styleUrls: ['./location.component.scss'],
 })
 export class LocationComponent implements OnInit, OnDestroy {
-  dataSource$: Observable<TransactionHistory> | null = null;
+  readonly emptyQtys = { qty_metal: 0, qty_plastic: 0 };
+  readonly loadingSentinel: TransactionHistory = {
+    location_name: 'Loading',
+    location_type: '',
+    balance_forward: this.emptyQtys,
+    balance_at_end: this.emptyQtys,
+    current_balance: this.emptyQtys,
+    transactions: [],
+  };
+  trxHistory$: BehaviorSubject<TransactionHistory> =
+    new BehaviorSubject<TransactionHistory>(this.loadingSentinel);
   location_id?: number;
+  dateRangeForm = new FormGroup({
+    start: new FormControl(startOfMonth(new Date())),
+    end: new FormControl(endOfMonth(new Date())),
+  });
   moveTrxForm = new FormGroup({
     from_location_id: new FormControl(null),
     to_location_id: new FormControl(null, Validators.required),
     qty_metal: new FormControl(0, Validators.required),
     qty_plastic: new FormControl(0, Validators.required),
   });
-  // TODO: Replace with API Call
-  nonMemberLocations = [
-    { value: 17, viewValue: 'Warehouse', grp: 'Warehouse' },
-    { value: 2, viewValue: 'Grassroots #1', grp: 'Food Vendors' },
-    { value: 3, viewValue: 'Grassroots #2', grp: 'Food Vendors' },
-    { value: 4, viewValue: 'Grassroots #3', grp: 'Food Vendors' },
-    { value: 5, viewValue: 'Greenstar', grp: 'Food Vendors' },
-    { value: 6, viewValue: 'Ithaca Re-Use Center', grp: 'Drop-Off Points' },
-    { value: 7, viewValue: 'Gorges Cycles', grp: 'Drop-Off Points' },
-    { value: 18, viewValue: 'Shrinkage', grp: 'Shrinkage' },
-  ];
-  nonMemberLocationsGroups = groupBy(this.nonMemberLocations, 'grp');
+  locationGroups$: Observable<LocationGroup[]>;
   postSubscription?: Subscription;
+  readonly trxColumns = [
+    'direction',
+    'event_timestamp',
+    'location',
+    'qty_metal',
+    'qty_plastic',
+  ];
 
   constructor(
     private route: ActivatedRoute,
-    private adminService: AdminService
+    private adminService: AdminService,
+    private router: Router
   ) {}
 
   ngOnDestroy(): void {
@@ -50,44 +60,49 @@ export class LocationComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.reloadHistory();
+    this.locationGroups$ = this.adminService.getLocationGroups();
+    this.route.params
+      .pipe(
+        tap((params) => {
+          this.location_id = toInteger(params['id']);
+          this.moveTrxForm.controls['from_location_id'].setValue(
+            this.location_id
+          );
+        }),
+        switchMap(() =>
+          this.adminService.getHistory(
+            this.location_id || -1,
+            this.dateRangeForm.controls['start'].value,
+            this.dateRangeForm.controls['end'].value
+          )
+        )
+      )
+      .subscribe((hist) => this.trxHistory$?.next(hist));
+    this.dateRangeForm.controls['end'].valueChanges.subscribe(() =>
+      this.reloadHistory()
+    );
   }
 
   reloadHistory() {
-    this.dataSource$ = this.route.params.pipe(
-      tap((params) => {
-        this.location_id = toInteger(params['id']);
-        this.moveTrxForm.controls['from_location_id'].setValue(
-          this.location_id
-        );
-      }),
-      switchMap(() =>
-        this.adminService.getHistory(
-          this.location_id || -1,
-          new Date('2022-03-01'),
-          new Date('2022-03-31')
-        )
-      ),
-      map((hist: TransactionHistory) => ({
-        ...hist,
-        // We pretend the balanceForward is an actual transaction.  It makes display easier.
-        transactions: [
-          {
-            event_timestamp: new Date(),
-            location_id: -1,
-            location_name: 'BALANCE FORWARD',
-            ...hist.balance_forward,
-          },
-          ...hist.transactions,
-        ],
-      }))
-    );
+    if (
+      !this.dateRangeForm.controls['start'].value ||
+      !this.dateRangeForm.controls['end'].value
+    ) {
+      return;
+    }
+    this.adminService
+      .getHistory(
+        this.location_id || -1,
+        this.dateRangeForm.controls['start'].value,
+        this.dateRangeForm.controls['end'].value
+      )
+      .subscribe((hist) => this.trxHistory$?.next(hist));
   }
 
   submitTransaction() {
     if (
       confirm(
-        `Did you want to move ${this.moveTrxForm.controls['qty_plastic'].value} plastic and ${this.moveTrxForm.controls['qty_plastic'].value} metal containers?`
+        `Did you want to move ${this.moveTrxForm.controls['qty_plastic'].value} plastic and ${this.moveTrxForm.controls['qty_metal'].value} metal containers?`
       )
     ) {
       this.postSubscription = this.adminService
@@ -97,5 +112,19 @@ export class LocationComponent implements OnInit, OnDestroy {
           this.reloadHistory();
         });
     }
+  }
+
+  generateInvoice() {
+    const fromDate = format(
+      this.dateRangeForm.controls['start'].value,
+      'yyyy-MM-dd'
+    );
+    const toDate = format(
+      this.dateRangeForm.controls['end'].value,
+      'yyyy-MM-dd'
+    );
+    this.router.navigateByUrl(
+      `/location/${this.location_id}/invoice/${fromDate}/${toDate}`
+    );
   }
 }

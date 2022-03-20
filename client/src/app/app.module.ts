@@ -9,6 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatCardModule } from '@angular/material/card';
 import { HttpClientModule } from '@angular/common/http';
 import { CheckoutContainersComponent } from './checkout-containers/checkout-containers.component';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -22,6 +23,7 @@ import { AuthGuard } from './auth.guard';
 import { LoginComponent } from './login/login.component';
 import { customInterceptorProviders } from './custom-interceptors/index';
 import { BecomeAMemberComponent } from './become-a-member/become-a-member.component';
+import { AgmCoreModule } from '@agm/core';
 
 @NgModule({
   declarations: [
@@ -40,6 +42,7 @@ import { BecomeAMemberComponent } from './become-a-member/become-a-member.compon
     BrowserAnimationsModule,
     HttpClientModule,
     MatButtonModule,
+    MatCardModule,
     MatChipsModule,
     MatDividerModule,
     MatProgressBarModule,
@@ -51,6 +54,9 @@ import { BecomeAMemberComponent } from './become-a-member/become-a-member.compon
       registrationStrategy: 'registerWhenStable:30000',
     }),
     SocialLoginModule,
+    AgmCoreModule.forRoot({
+      apiKey: 'AIzaSyDqhttlxNWY2Vlcq7LdKWQQw0gJh57WH_0',
+    }),
   ],
   providers: [
     {

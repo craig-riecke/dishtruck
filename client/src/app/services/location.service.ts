@@ -12,6 +12,11 @@ export interface DishtruckLocation {
   creation_date: Date;
   requires_sub_location: boolean;
   default_container_type: string;
+  lat: number;
+  lng: number;
+  street_address: string;
+  city: string;
+  zip: string;
 }
 
 @Injectable({

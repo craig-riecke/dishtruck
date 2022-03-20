@@ -1,18 +1,3 @@
-.doc-layout {
-  display: flex;
-  flex-wrap: wrap;
-}
-
-.move-card {
-  max-width: 500px;
-  margin: 10px;
-}
-
-.history-card {
-  min-width: 700px;
-  margin: 10px;
-}
-
 table {
   width: 100%;
   max-width: 800px;
@@ -44,4 +29,10 @@ td.mat-footer-cell {
 
 .mat-column-qty_plastic {
   text-align: right;
+}
+
+@media print {
+  .invisible-on-print {
+    display: none;
+  }
 }
