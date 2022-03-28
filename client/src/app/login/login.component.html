@@ -1,13 +1,40 @@
 <div class="outer-container">
-  <img class="dishtruck-logo" src="assets/dish-truck-logo-small.jpeg" />
+  <div class="logo-container">
+    <div></div>
+    <div>
+      <img class="dishtruck-logo" src="assets/dish-truck-logo-small.jpeg" />
+    </div>
+    <div></div>
+  </div>
 
-  <h1>Login to Dish Truck</h1>
+  <div class="content-container">
+    <div></div>
+    <div>
+      <h1>Sign in to Dish Truck</h1>
+      <p>
+        If you are not yet a member, <br />you will get a chance to join after
+        logging on
+      </p>
+      <br /><br />
 
-  <button
-    (click)="loginWithGoogle()"
-    mat-raised-button
-    class="google-login-btn"
-  >
-    Login With Google
-  </button>
+      <button
+        (click)="loginWithApple()"
+        mat-raised-button
+        class="apple-login-btn"
+      >
+        Sign in with Apple
+      </button>
+
+      <br /><br />
+
+      <button
+        (click)="loginWithGoogle()"
+        mat-raised-button
+        class="google-login-btn"
+      >
+        Sign in with Google
+      </button>
+    </div>
+    <div></div>
+  </div>
 </div>

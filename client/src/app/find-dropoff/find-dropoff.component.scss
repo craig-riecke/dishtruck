@@ -5,6 +5,8 @@
 .doc-layout {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
 }
 
 .dropoff-point-card {
@@ -13,5 +15,11 @@
 }
 
 agm-map {
-  height: 300px;
+  height: 200px;
+}
+
+.content-container div {
+  display: grid;
+  align-items: center;
+  justify-items: center;
 }

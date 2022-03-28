@@ -1,43 +1,57 @@
 <div class="outer-container" *ngIf="containerNumbers">
-  <img class="dishtruck-logo" src="assets/dish-truck-logo-small.jpeg" />
+  <div class="logo-container">
+    <div></div>
+    <div>
+      <img class="dishtruck-logo" src="assets/dish-truck-logo-small.jpeg" />
+    </div>
+    <div></div>
+  </div>
 
-  <h1>Return Containers</h1>
+  <div class="content-container">
+    <div></div>
+    <div>
+      <h1>Return Containers</h1>
 
-  <form [formGroup]="dropoffForm" (submit)="saveDropoff()">
-    <p>How many plastic containers are you returning?</p>
+      <form [formGroup]="dropoffForm" (submit)="saveDropoff()">
+        <p>How many plastic containers are you returning?</p>
 
-    <mat-chip-list formControlName="qty_plastic" [selectable]="true">
-      <mat-chip
-        *ngFor="let containerNumber of containerNumbers.plastic"
-        [value]="containerNumber"
-        (click)="changePlasticQtyTo(containerNumber)"
-        >{{ containerNumber }}</mat-chip
-      >
-    </mat-chip-list>
+        <mat-chip-list formControlName="qty_plastic" [selectable]="true">
+          <mat-chip
+            *ngFor="let containerNumber of containerNumbers.plastic"
+            [value]="containerNumber"
+            (click)="changePlasticQtyTo(containerNumber)"
+            >{{ containerNumber }}</mat-chip
+          >
+        </mat-chip-list>
 
-    <br />
+        <br />
 
-    <p>How many metal containers are you returning?</p>
+        <p>How many metal containers are you returning?</p>
 
-    <mat-chip-list formControlName="qty_metal" [selectable]="true">
-      <mat-chip
-        *ngFor="let containerNumber of containerNumbers.metal"
-        [value]="containerNumber"
-        (click)="changeMetalQtyTo(containerNumber)"
-        >{{ containerNumber }}</mat-chip
-      >
-    </mat-chip-list>
+        <mat-chip-list formControlName="qty_metal" [selectable]="true">
+          <mat-chip
+            *ngFor="let containerNumber of containerNumbers.metal"
+            [value]="containerNumber"
+            (click)="changeMetalQtyTo(containerNumber)"
+            >{{ containerNumber }}</mat-chip
+          >
+        </mat-chip-list>
 
-    <br />
+        <br />
 
-    <mat-divider></mat-divider>
-    <br />
+        <mat-divider></mat-divider>
+        <br />
 
-    <button mat-raised-button [disabled]="dropoffForm.invalid || saving">
-      Complete Dropoff
-    </button>
+        <button mat-raised-button [disabled]="dropoffForm.invalid || saving">
+          Complete Dropoff
+        </button>
 
-    <br /><br />
-    <mat-progress-bar mode="indeterminate" *ngIf="saving"></mat-progress-bar>
-  </form>
+        <br /><br />
+        <mat-progress-bar
+          mode="indeterminate"
+          *ngIf="saving"
+        ></mat-progress-bar>
+      </form>
+    </div>
+  </div>
 </div>

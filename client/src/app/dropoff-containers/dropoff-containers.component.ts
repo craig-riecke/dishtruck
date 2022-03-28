@@ -19,8 +19,8 @@ export class DropoffContainersComponent implements OnInit, OnDestroy {
   saveSubscription: Subscription;
   containerNumbers: { plastic: number[]; metal: number[] };
   dropoffForm = new FormGroup({
-    qty_metal: new FormControl(null, Validators.required),
-    qty_plastic: new FormControl(null, Validators.required),
+    qty_metal: new FormControl(0, Validators.required),
+    qty_plastic: new FormControl(0, Validators.required),
   });
   saving = false;
   dropoffPoint?: DishtruckLocation;
@@ -51,13 +51,6 @@ export class DropoffContainersComponent implements OnInit, OnDestroy {
           plastic: range(0, this.memberRecord.qty_plastic + 1),
           metal: range(0, this.memberRecord.qty_metal + 1),
         };
-        // For convenience, auto-select 0
-        if (!this.memberRecord.qty_plastic) {
-          this.dropoffForm.controls['qty_plastic'].setValue(0);
-        }
-        if (!this.memberRecord.qty_metal) {
-          this.dropoffForm.controls['qty_metal'].setValue(0);
-        }
         if (!this.dropoffPoint) {
           alert('The QR Code you used is incorrect.  Please try again.');
           return;

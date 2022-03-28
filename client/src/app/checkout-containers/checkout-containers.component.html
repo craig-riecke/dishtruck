@@ -1,41 +1,118 @@
-<div class="outer-container" *ngIf="foodVendors$ | async as foodVendors">
-  <img class="dishtruck-logo" src="assets/dish-truck-logo-small.jpeg" />
+<div class="outer-container">
+  <div class="logo-container">
+    <div></div>
+    <div>
+      <img class="dishtruck-logo" src="assets/dish-truck-logo-small.jpeg" />
+    </div>
+    <div></div>
+  </div>
 
-  <h1>Signout Containers</h1>
+  <div class="content-container">
+    <div></div>
+    <div>
+      <h1>Signout Containers</h1>
 
-  <form [formGroup]="signoutForm" (submit)="saveCheckout()">
-    <p>Where are picking up your order?</p>
+      <form [formGroup]="signoutForm" (submit)="saveCheckout()">
+        <mat-stepper orientation="vertical" [linear]="true" #stepper>
+          <mat-step>
+            <ng-template matStepLabel
+              >Where are picking up your food?</ng-template
+            >
 
-    <mat-chip-list formControlName="from_location_id" [selectable]="true">
-      <mat-chip
-        *ngFor="let foodVendor of foodVendors"
-        [value]="foodVendor.id"
-        (click)="changeFoodVendorTo(foodVendor)"
-        >{{ foodVendor.full_name }}</mat-chip
-      >
-    </mat-chip-list>
+            <mat-chip-list
+              formControlName="from_location_id"
+              [selectable]="true"
+              *ngIf="foodVendors$ | async as foodVendors"
+            >
+              <mat-chip
+                *ngFor="let foodVendor of foodVendors"
+                [value]="foodVendor.id"
+                (click)="changeFoodVendorTo(foodVendor)"
+                >{{ foodVendor.full_name }}</mat-chip
+              >
+            </mat-chip-list>
+          </mat-step>
 
-    <br />
-    <p>How many containers are you signing out?</p>
+          <mat-step>
+            <ng-template matStepLabel
+              >How many containers are you signing out?</ng-template
+            >
 
-    <mat-chip-list formControlName="qty" [selectable]="true">
-      <mat-chip
-        *ngFor="let containerNumber of containerNumbers"
-        [value]="containerNumber"
-        (click)="changeQtyTo(containerNumber)"
-        >{{ containerNumber }}</mat-chip
-      >
-    </mat-chip-list>
+            <img
+              class="container-image"
+              [src]="'assets/' + defaultContainerType + '.png'"
+            />
 
-    <br />
-    <mat-divider></mat-divider>
-    <br />
+            <mat-chip-list formControlName="qty" [selectable]="true">
+              <mat-chip
+                *ngFor="let containerNumber of containerNumbers"
+                [value]="containerNumber"
+                (click)="changeQtyTo(containerNumber)"
+                >{{ containerNumber }}</mat-chip
+              >
+            </mat-chip-list>
 
-    <button mat-raised-button [disabled]="signoutForm.invalid || saving">
-      Signout
-    </button>
+            <br />
+            <div>
+              <button
+                mat-raised-button
+                matStepperPrevious
+                type="button"
+                color="accent"
+              >
+                Back
+              </button>
+            </div>
+          </mat-step>
 
-    <br /><br />
-    <mat-progress-bar mode="indeterminate" *ngIf="saving"></mat-progress-bar>
-  </form>
+          <mat-step>
+            <ng-template matStepLabel>Review your order</ng-template>
+
+            <div>
+              You are signing out
+              {{ signoutForm.controls["qty"].value }} container(s) from
+              {{ selectedfoodVendorName }}.
+            </div>
+            <div>
+              Your total charge is
+              {{ signoutForm.controls["qty"].value | currency }}.
+            </div>
+            <div>
+              Please return your containers by
+              <strong>{{ returnDate | date: "longDate" }}</strong>
+            </div>
+            <div>
+              <button
+                mat-raised-button
+                matStepperPrevious
+                type="button"
+                color="accent"
+              >
+                Back
+              </button>
+              &nbsp;&nbsp;
+              <button
+                mat-raised-button
+                [disabled]="signoutForm.invalid || saving"
+                color="accent"
+              >
+                Confirm
+              </button>
+            </div>
+            <div>
+              Failure to return your container(s) by date above will result in a
+              $40.00 replacement fee.
+            </div>
+
+            <br /><br />
+            <mat-progress-bar
+              mode="indeterminate"
+              *ngIf="saving"
+            ></mat-progress-bar>
+          </mat-step>
+        </mat-stepper>
+      </form>
+    </div>
+    <div></div>
+  </div>
 </div>

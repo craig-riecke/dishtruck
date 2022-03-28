@@ -1,0 +1,13 @@
+.content-container div {
+  display: grid;
+  align-items: center;
+  justify-items: center;
+}
+
+.qty-confirmation {
+  height: 300px;
+  width: 300px;
+  font-size: 128px;
+  border-radius: 50%;
+  background-image: linear-gradient(to bottom, #a8d08c, #122e0c);
+}

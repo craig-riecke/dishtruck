@@ -1,32 +1,50 @@
 <div class="outer-container" *ngIf="dropoffPoints$ | async as dropoffPoints">
-  <h1>Dropoff Points</h1>
-
-  <div class="doc-layout">
-    <mat-card
-      *ngFor="let dropoffPoint of dropoffPoints"
-      class="dropoff-point-card"
-    >
-      <mat-card-header>
-        <mat-card-title>{{ dropoffPoint.full_name }}</mat-card-title>
-        <mat-card-subtitle
-          >{{ dropoffPoint.street_address }},
-          {{ dropoffPoint.city }}</mat-card-subtitle
-        >
-      </mat-card-header>
-      <mat-card-content>
-        <agm-map
-          [latitude]="dropoffPoint.lat"
-          [longitude]="dropoffPoint.lng"
-          [zoom]="16"
-        >
-          <agm-marker
-            [latitude]="dropoffPoint.lat"
-            [longitude]="dropoffPoint.lng"
-          ></agm-marker>
-        </agm-map>
-      </mat-card-content>
-    </mat-card>
+  <div class="logo-container">
+    <div></div>
+    <div>
+      <img class="dishtruck-logo" src="assets/dish-truck-logo-small.jpeg" />
+    </div>
+    <div></div>
   </div>
 
-  <a mat-raised-button [routerLink]="'/home'">Back to The Home Screen</a>
+  <div class="content-container">
+    <div></div>
+    <div>
+      <h1>Dropoff Points</h1>
+
+      <div>
+        Go to a dropoff point with your rinsed containers, and scan the QR Code
+        there to complete your return.
+      </div>
+
+      <br />
+
+      <div class="doc-layout">
+        <mat-card
+          *ngFor="let dropoffPoint of dropoffPoints"
+          class="dropoff-point-card"
+        >
+          <mat-card-header>
+            <mat-card-title>{{ dropoffPoint.full_name }}</mat-card-title>
+            <mat-card-subtitle
+              >{{ dropoffPoint.street_address }},
+              {{ dropoffPoint.city }}</mat-card-subtitle
+            >
+          </mat-card-header>
+          <mat-card-content>
+            <agm-map
+              [latitude]="dropoffPoint.lat"
+              [longitude]="dropoffPoint.lng"
+              [zoom]="16"
+            >
+              <agm-marker
+                [latitude]="dropoffPoint.lat"
+                [longitude]="dropoffPoint.lng"
+              ></agm-marker>
+            </agm-map>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
+  </div>
 </div>

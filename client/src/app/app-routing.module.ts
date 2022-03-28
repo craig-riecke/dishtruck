@@ -8,11 +8,18 @@ import { LoginComponent } from './login/login.component';
 import { CheckoutContainersComponent } from './checkout-containers/checkout-containers.component';
 import { VerifyCheckoutComponent } from './verify-checkout/verify-checkout.component';
 import { BecomeAMemberComponent } from './become-a-member/become-a-member.component';
+import { HowItWorksComponent } from './how-it-works/how-it-works.component';
+import { SupportComponent } from './support/support.component';
 
 const routes: Routes = [
   {
     path: 'become-a-member',
     component: BecomeAMemberComponent,
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'checkout-containers',
+    component: CheckoutContainersComponent,
     canActivate: [AuthGuard],
   },
   {
@@ -26,12 +33,13 @@ const routes: Routes = [
     canActivate: [AuthGuard],
   },
   { path: 'home', component: HomeComponent, canActivate: [AuthGuard] },
-  { path: 'login', component: LoginComponent },
   {
-    path: 'checkout-containers',
-    component: CheckoutContainersComponent,
+    path: 'how-it-works',
+    component: HowItWorksComponent,
     canActivate: [AuthGuard],
   },
+  { path: 'login', component: LoginComponent },
+  { path: 'support', component: SupportComponent, canActivate: [AuthGuard] },
   {
     path: 'verify-checkout',
     component: VerifyCheckoutComponent,

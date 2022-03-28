@@ -1,23 +1,45 @@
 <div class="outer-container" *ngIf="verifyDetails">
-  <img class="dishtruck-logo" src="assets/dish-truck-logo-small.jpeg" />
+  <div class="logo-container">
+    <div></div>
+    <div>
+      <img class="dishtruck-logo" src="assets/dish-truck-logo-small.jpeg" />
+    </div>
+    <div></div>
+  </div>
 
-  <h1>You're Ready!</h1>
+  <div class="content-container">
+    <div></div>
+    <div>
+      <h1>Thank you!</h1>
 
-  <p>
-    Show this device to the food vendor and they'll give you your
-    containers...ready for eatin'
-  </p>
+      <div>Please show this screen to {{ verifyDetails.food_vendor_name }}</div>
 
-  <mat-divider></mat-divider>
+      <br />
 
-  <h2>This Dish Truck Member is authorized for</h2>
+      <div class="qty-confirmation">
+        {{ verifyDetails.qty }}
+      </div>
 
-  <h1>
-    {{ verifyDetails.qty }} containers from {{ verifyDetails.food_vendor_name }}
-  </h1>
-
-  <h2>at {{ verifyDetails.timestamp | date: "medium" }}</h2>
-
-  <a mat-raised-button [routerLink]="'/home'">Back to The Home Screen</a>
+      <br /><br />
+      <div>Confirmed on {{ verifyDetails.timestamp | date: "medium" }}</div>
+    </div>
+  </div>
 </div>
-<div *ngIf="!verifyDetails">Ooops. Did you checkout?</div>
+<div class="outer-container" *ngIf="!verifyDetails">
+  <div class="logo-container">
+    <div></div>
+    <div>
+      <img class="dishtruck-logo" src="assets/dish-truck-logo-small.jpeg" />
+    </div>
+    <div></div>
+  </div>
+
+  <div class="content-container">
+    <div></div>
+    <div>
+      <h1>Ooops!</h1>
+
+      <div>You haven't checked out yet. Use the Get a Dish menu item</div>
+    </div>
+  </div>
+</div>

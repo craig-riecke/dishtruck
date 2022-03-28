@@ -1,3 +1,93 @@
+@use "@angular/material" as mat;
+
+@include mat.core();
+
+$md-dtprimary: (
+  50: #e0ede4,
+  100: #b5d2bc,
+  200: #88b592,
+  300: #60986b,
+  400: #488453,
+  500: #37703e,
+  600: #316536,
+  700: #2a572b,
+  800: #204821,
+  900: #122e0c,
+  A100: #f0fcd1,
+  A200: #ebf7cc,
+  A400: #c2cda4,
+  A700: #65704b,
+  contrast: (
+    50: #e7e5eb,
+    100: #f0fcd1,
+    200: #a094ae,
+    300: #7d6c8d,
+    400: #654e76,
+    500: #503161,
+    600: #4a2b59,
+    700: #42224f,
+    800: #381a43,
+    900: #280c2e,
+    A100: #000000,
+    A200: #000000,
+    A400: #000000,
+    A700: #000000,
+  ),
+);
+
+$md-dtaccent: (
+  50: #f0f7eb,
+  100: #d9ebcc,
+  200: #c0ddac,
+  300: #a8d08c,
+  400: #96c674,
+  500: #83bd5b,
+  600: #75ad52,
+  700: #639948,
+  800: #51853e,
+  900: #32632b,
+  A100: #e0e3b9,
+  A200: #cad08c,
+  A400: #a5b23c,
+  A700: #708500,
+  contrast: (
+    50: #000000,
+    100: #000000,
+    200: #000000,
+    300: #000000,
+    400: #000000,
+    500: #000000,
+    600: #000000,
+    700: #000000,
+    800: #000000,
+    900: #000000,
+    A100: #000000,
+    A200: #000000,
+    A400: #000000,
+    A700: #000000,
+  ),
+);
+
+$dishtruck-primary: mat.define-palette($md-dtprimary, 500);
+$dishtruck-accent: mat.define-palette($md-dtaccent, A200, A100, A400);
+
+// Create the theme object (a Sass map containing all of the palettes).
+$dishtruck-theme: mat.define-dark-theme(
+  (
+    color: (
+      primary: $dishtruck-primary,
+      accent: $dishtruck-accent,
+    ),
+  )
+);
+
+// Include theme styles for core and each component used in your app.
+// Alternatively, you can import and @include the theme mixins for each component
+// that you are using.
+
+// Emit theme-dependent styles for common features used across multiple components.
+@include mat.all-component-themes($dishtruck-theme);
+
 /* You can add global styles to this file, and also import other style files */
 
 html,
@@ -11,4 +101,26 @@ body {
 
 .dishtruck-logo {
   max-width: 300px;
+  border-radius: 25px;
+  text-align: center;
+}
+
+.logo-container {
+  padding-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr minmax(300px, 1fr) 1fr;
+}
+
+.logo-container div {
+  display: grid;
+  align-items: center;
+  justify-items: center;
+}
+
+.content-container {
+  padding-top: 10px;
+  padding-bottom: 30px;
+  display: grid;
+  grid-template-columns: 1fr minmax(400px, 1fr) 1fr;
+  align-items: center;
 }

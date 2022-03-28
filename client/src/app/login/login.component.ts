@@ -41,4 +41,8 @@ export class LoginComponent {
         ]);
       });
   }
+
+  loginWithApple(): void {
+    alert('Sorry, apple login is not supportwed in this demo.');
+  }
 }

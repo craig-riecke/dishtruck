@@ -1,5 +1,19 @@
+.content-container div {
+  display: grid;
+  align-items: center;
+  justify-items: center;
+}
+
 .google-login-btn {
   background-image: url("../../../src/assets/google-logo.png");
+  background-repeat: no-repeat;
+  background-size: 15%;
+  background-position: 10%;
+  padding-left: 10%;
+}
+
+.apple-login-btn {
+  background-image: url("../../../src/assets/apple-logo.png");
   background-repeat: no-repeat;
   background-size: 15%;
   background-position: 10%;
