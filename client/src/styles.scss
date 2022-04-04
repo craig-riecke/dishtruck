@@ -100,25 +100,30 @@ body {
 }
 
 .dishtruck-logo {
-  max-width: 300px;
-  border-radius: 25px;
-  text-align: center;
+  width: 175px;
+  height: 175px;
+  border-radius: 50%;
+  border-color: #122e0c;
+  border-width: 2px;
+  background-color: white;
+  background-image: url(assets/dish-truck-logo-banner.png);
+  background-position: 50% 50%;
+  background-repeat: no-repeat;
 }
 
-.logo-container {
-  padding-top: 10px;
-  display: grid;
-  grid-template-columns: 1fr minmax(300px, 1fr) 1fr;
-}
+.logo-container-positioner {
+  position: absolute;
+  top: 10px;
+  left: 0;
+  right: 0;
+  margin-left: auto;
+  margin-right: auto;
+  width: 175px;
 
-.logo-container div {
-  display: grid;
-  align-items: center;
-  justify-items: center;
 }
 
 .content-container {
-  padding-top: 10px;
+  padding-top: 100px;
   padding-bottom: 30px;
   display: grid;
   grid-template-columns: 1fr minmax(400px, 1fr) 1fr;

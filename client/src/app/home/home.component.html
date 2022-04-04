@@ -1,24 +1,26 @@
 <div class="outer-container" *ngIf="memberRecord$ | async as memberRecord">
-  <div class="logo-container">
-    <div></div>
-    <div>
-      <img class="dishtruck-logo" src="assets/dish-truck-logo-small.jpeg" />
-    </div>
-    <div></div>
+  <div class="logo-container-positioner">
+    <div class="dishtruck-logo"></div>
   </div>
 
   <div class="content-container">
     <div></div>
     <div>
-      <h1>Welcome to Dish Truck!</h1>
-      <br /><br />
-      <h2>Diminish the waste, by using a dish.</h2>
+      <h1>
+        Welcome <br />
+        {{ memberRecord.full_name }}&nbsp;&nbsp;!
+      </h1>
       <br /><br />
       <h2>
         You Have
         {{ memberRecord.qty_plastic + memberRecord.qty_metal }}
         containers signed out
       </h2>
+      <br /><br />
+      <p>
+        * Remember, your account will be charged for any dishes not returned
+        within 30 days of signout, $10 for clamshells, $20 for containers.
+      </p>
     </div>
     <div></div>
   </div>

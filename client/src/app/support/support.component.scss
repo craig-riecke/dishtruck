@@ -1,0 +1,14 @@
+.content-container div {
+  display: grid;
+  align-items: center;
+  justify-items: center;
+}
+
+.mat-expansion-panel-header {
+  background-image: linear-gradient(to bottom, #a8d08c, #122e0c);
+}
+
+.mat-expansion-panel-header-title {
+  color: white;
+}
+

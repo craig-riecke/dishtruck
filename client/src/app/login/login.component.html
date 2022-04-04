@@ -1,21 +1,19 @@
 <div class="outer-container">
-  <div class="logo-container">
-    <div></div>
-    <div>
-      <img class="dishtruck-logo" src="assets/dish-truck-logo-small.jpeg" />
-    </div>
-    <div></div>
+  <div class="logo-container-positioner">
+    <div class="dishtruck-logo"></div>
   </div>
 
   <div class="content-container">
     <div></div>
     <div>
-      <h1>Sign in to Dish Truck</h1>
-      <p>
-        If you are not yet a member, <br />you will get a chance to join after
-        logging on
-      </p>
+      <h1>Welcome to Dish Truck</h1>
+      <p>Diminish the waste, by using a dish</p>
       <br /><br />
+
+      <p>
+        Sign in with Apple or Google. If you are not yet a Dish Truck member,
+        you will get a chance to sign up.
+      </p>
 
       <button
         (click)="loginWithApple()"
@@ -34,6 +32,11 @@
       >
         Sign in with Google
       </button>
+
+      <br /><br />
+      <p>Not a member yet? Need more info?</p>
+
+      <a href="/how-it-works" mat-raised-button> Learn More </a>
     </div>
     <div></div>
   </div>

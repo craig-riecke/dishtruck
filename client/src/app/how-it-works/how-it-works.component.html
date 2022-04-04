@@ -1,60 +1,75 @@
 <div class="outer-container">
-  <div class="logo-container">
-    <div></div>
-    <div>
-      <img class="dishtruck-logo" src="assets/dish-truck-logo-small.jpeg" />
-    </div>
-    <div></div>
+  <div class="logo-container-positioner">
+    <div class="dishtruck-logo"></div>
   </div>
 
   <div class="content-container">
     <div></div>
     <div>
       <h1>How it works</h1>
-      <br /><br />
 
       <mat-accordion>
-        <mat-expansion-panel>
+        <mat-expansion-panel expanded="true">
           <mat-expansion-panel-header>
-            <mat-panel-title> 1. Pick your food vendor </mat-panel-title>
+            <mat-panel-title>
+              1. Login with your existing Google or Apple account
+            </mat-panel-title>
           </mat-expansion-panel-header>
           <p>
-            Vendors who participate with Dish Truck are saving disposable waste
-            from going to the landfill and giving you the opportunity to help by
-            offering reusable dishes for your food.
+            If you are not yet a Dish Truck member, after logging in you will
+            have a chance to create a Dish Truck account. Your account is linked
+            to the payment option of your choice. The cost is $1 per set of
+            dishes per use. Dishes must be returned within 30 days, or a
+            replacement fee of $10 - $20 per set will be charged.
           </p>
         </mat-expansion-panel>
         <mat-expansion-panel>
           <mat-expansion-panel-header>
-            <mat-panel-title>
-              2. Pick how many containers you need
-            </mat-panel-title>
+            <mat-panel-title> 2. Get a set of dishes </mat-panel-title>
           </mat-expansion-panel-header>
-          <p>TEXT GOES HERE</p>
+          <p>
+            We are currently participating with GreenStar Co-Op and various food
+            vendors at GrassRoots Fest and more to come.
+          </p>
         </mat-expansion-panel>
         <mat-expansion-panel>
           <mat-expansion-panel-header>
             <mat-panel-title> 3. Confirm and check out </mat-panel-title>
           </mat-expansion-panel-header>
-          <p>TEXT GOES HERE</p>
+          <p>
+            You will receive a confirmation screen to show the vendor proof of
+            purchase.
+          </p>
+        </mat-expansion-panel>
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-panel-title> 4. Return your dish </mat-panel-title>
+          </mat-expansion-panel-header>
+          <p>
+            Find a dish return station in this app. Then scan the QR Code at the
+            return site to return your dishes.
+          </p>
         </mat-expansion-panel>
         <mat-expansion-panel>
           <mat-expansion-panel-header>
             <mat-panel-title>
-              4. Return your dish back at designated station
+              5. Feel the gratitude that comes with Bringing Sustainability to
+              the Party!
             </mat-panel-title>
           </mat-expansion-panel-header>
-          <p>TEXT GOES HERE</p>
-        </mat-expansion-panel>
-        <mat-expansion-panel>
-          <mat-expansion-panel-header>
-            <mat-panel-title>
-              5. Thank yourself for caring about the planet
-            </mat-panel-title>
-          </mat-expansion-panel-header>
-          <p>TEXT GOES HERE</p>
+          <p>
+            Together with folks like you, Dish Truck as helped keep over 10,000
+            pieces of garbage and 60 gallons of compost out of the landfill!
+            Side effects include a sense of relief, problem solving and standing
+            ovations. Thank You! Gracias!
+          </p>
         </mat-expansion-panel>
       </mat-accordion>
+
+      <br /><br />
+      <a href="/login" mat-raised-button>
+        Ready to Start? Click Here to Login
+      </a>
     </div>
     <div></div>
   </div>

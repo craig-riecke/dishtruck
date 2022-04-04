@@ -11,6 +11,7 @@ export interface DishtruckLocation {
   qty_plastic: number;
   creation_date: Date;
   requires_sub_location: boolean;
+  parent_location_id: number;
   default_container_type: string;
   lat: number;
   lng: number;

@@ -1,10 +1,6 @@
 <div class="outer-container">
-  <div class="logo-container">
-    <div></div>
-    <div>
-      <img class="dishtruck-logo" src="assets/dish-truck-logo-small.jpeg" />
-    </div>
-    <div></div>
+  <div class="logo-container-positioner">
+    <div class="dishtruck-logo"></div>
   </div>
 
   <div class="content-container">
@@ -31,6 +27,21 @@
                 >{{ foodVendor.full_name }}</mat-chip
               >
             </mat-chip-list>
+
+            <div *ngIf="showSubLocations">
+              <mat-chip-list
+                formControlName="from_sublocation_id"
+                [selectable]="true"
+                *ngIf="foodSubVendors$ | async as foodSubVendors"
+              >
+                <mat-chip
+                  *ngFor="let foodSubVendor of foodSubVendors"
+                  [value]="foodSubVendor.id"
+                  (click)="changeFoodVendorTo(foodSubVendor)"
+                  >{{ foodSubVendor.full_name }}</mat-chip
+                >
+              </mat-chip-list>
+            </div>
           </mat-step>
 
           <mat-step>
@@ -100,8 +111,14 @@
               </button>
             </div>
             <div>
-              Failure to return your container(s) by date above will result in a
-              $40.00 replacement fee.
+              {{ (memberRecord$ | async)?.full_name }}, Thank you for using our
+              reusable dishes and keeping disposable waste out of the landfill!
+              As a reminder, your account will be charged on the last day of the
+              month for the total number of dishes you have used, and/or a
+              replacement fee for any that have not been returned. The number of
+              dishes you have signed out is located on your account's home
+              screen. Yours for the planet from, The Dish Truck Crew Bringing
+              Sustainability to the Party!
             </div>
 
             <br /><br />

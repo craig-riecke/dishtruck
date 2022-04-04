@@ -17,18 +17,23 @@ import { addDays } from 'date-fns';
   styleUrls: ['./checkout-containers.component.scss'],
 })
 export class CheckoutContainersComponent implements OnInit, OnDestroy {
+  memberRecord$: Observable<DishtruckLocation>;
   foodVendors$: Observable<DishtruckLocation[]>;
+  foodSubVendors$: Observable<DishtruckLocation[]>;
   containerNumbers = range(1, 10);
   signoutForm = new FormGroup({
     from_location_id: new FormControl(null, Validators.required),
+    from_sublocation_id: new FormControl(null),
     qty: new FormControl(null, Validators.required),
   });
   saving = false;
+  selectedfoodVendorId: number | null = null;
   selectedfoodVendorName: string | null = null;
+  selectedQty: number | null = null;
   saveSubscription: Subscription;
-  selectedParentLocation?: number;
   returnDate: Date = addDays(new Date(), 7);
   defaultContainerType: string;
+  showSubLocations = false;
 
   constructor(
     private locationService: LocationService,
@@ -37,26 +42,28 @@ export class CheckoutContainersComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    this.memberRecord$ = this.locationService.getMyMemberRecord();
     this.foodVendors$ = this.locationService.getFoodVendors();
+    // There is only one for now, so don't make it too complicated
+    this.foodSubVendors$ = this.locationService.getSubLocations(1);
   }
 
   @ViewChild('stepper') private myStepper: MatStepper;
 
   changeFoodVendorTo(foodVendor: DishtruckLocation) {
     if (foodVendor.requires_sub_location) {
-      if (!this.selectedParentLocation) {
-        this.foodVendors$ = forkJoin([
-          this.locationService.getFoodVendors(),
-          this.locationService.getSubLocations(foodVendor.id),
-        ]).pipe(
-          map(([primaryFoodVendors, subFoodVendors]) => [
-            ...primaryFoodVendors,
-            ...subFoodVendors,
-          ])
-        );
-      }
-    } else {
+      this.showSubLocations = true;
       this.signoutForm.controls['from_location_id'].setValue(foodVendor.id);
+    } else {
+      if (foodVendor.parent_location_id) {
+        this.signoutForm.controls['from_sublocation_id'].setValue(
+          foodVendor.id
+        );
+      } else {
+        this.showSubLocations = false;
+        this.signoutForm.controls['from_location_id'].setValue(foodVendor.id);
+      }
+      this.selectedfoodVendorId = foodVendor.id;
       this.selectedfoodVendorName = foodVendor.full_name;
       this.defaultContainerType = foodVendor.default_container_type;
       this.myStepper.next();
@@ -65,6 +72,7 @@ export class CheckoutContainersComponent implements OnInit, OnDestroy {
 
   changeQtyTo(newQty: number) {
     this.signoutForm.controls['qty'].setValue(newQty);
+    this.selectedQty = newQty;
     this.returnDate = addDays(new Date(), 7);
     this.myStepper.next();
   }
@@ -72,12 +80,20 @@ export class CheckoutContainersComponent implements OnInit, OnDestroy {
   saveCheckout() {
     this.saving = true;
     // Shouldn't happen because of validation
-    if (!this.selectedfoodVendorName) {
-      alert('Select a vendor first');
+    if (
+      !this.selectedfoodVendorName ||
+      !this.selectedQty ||
+      !this.selectedfoodVendorId
+    ) {
+      alert('Select a vendor and qty first');
       return;
     }
+    const trx = {
+      qty: this.selectedQty,
+      from_location_id: this.selectedfoodVendorId,
+    };
     this.saveSubscription = this.transactionService
-      .checkoutContainers(this.signoutForm.value, this.selectedfoodVendorName)
+      .checkoutContainers(trx, this.selectedfoodVendorName)
       .subscribe(() => this.router.navigate(['verify-checkout']));
   }
 
