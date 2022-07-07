@@ -1,0 +1,22 @@
+[
+  {
+    "id": "LVW7DTB3KV4TS",
+    "type": "dropoff-point",
+    "full_name": "Greenstar",
+    "lat": 42.44543,
+    "lng": -76.5098,
+    "street_address": "770 Cascadilla St",
+    "city": "Ithaca",
+    "zip": "14850"
+  },
+  {
+    "id": "LJHEHCE30P1B4",
+    "type": "dropoff-point",
+    "full_name": "Grassroots - Food Vendor Row",
+    "lat": 42.53591,
+    "lng": -76.64648,
+    "street_address": "2150 Trumansburg Rd",
+    "city": "Trumansburg",
+    "zip": "14850"
+  }
+]

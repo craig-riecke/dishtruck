@@ -1,144 +1,411 @@
-import { Pool } from 'pg';
+// import { Pool } from 'pg';
+import { Firestore } from '@google-cloud/firestore';
 import * as _ from 'lodash';
+import { Client } from 'square';
+import { parseISO } from 'date-fns';
+
+export interface DishtruckLocation {
+  id: string;
+  type: 'member' | 'food-vendor' | 'dropoff-point' | 'unknown-member';
+  full_name: string;
+  qty_checked_out_this_month: number;
+  qty_metal: number;
+  qty_plastic: number;
+  creation_date: Date;
+  requires_sub_location: boolean;
+  parent_location_id: number | null;
+  default_container_type: string;
+  lat: number | null;
+  lng: number | null;
+  street_address: string | null;
+  city: string | null;
+  zip: string | null;
+}
 
 export class LocationsService {
-  public static async locationbyId(pgPool: Pool, id: number) {
-    const recs = await pgPool.query('SELECT * FROM locations WHERE id=$1', [
-      id,
-    ]);
-    return recs.rows[0] || null;
+  private static async getFirestoreDocument(docPath: string): Promise<any> {
+    const firestore = new Firestore();
+
+    const doc = firestore.doc(docPath);
+    return (await doc.get()).data();
   }
 
-  public static async locationByName(pgPool: Pool, type: string, name: string) {
-    const recs = await pgPool.query(
-      'SELECT * FROM locations WHERE type=$1 AND full_name=$2',
-      [type, name]
+  public static async getMemberByEmail(
+    squareClient: Client,
+    userId: string
+  ): Promise<DishtruckLocation | null> {
+    const response = await squareClient.customersApi.searchCustomers({
+      query: {
+        filter: {
+          emailAddress: {
+            exact: userId,
+          },
+        },
+      },
+    });
+    if (!response?.result?.customers || response.result.customers.length < 1) {
+      return null;
+    } else {
+      const customer = response.result.customers[0];
+
+      const memberDoc = await this.getFirestoreDocument(
+        `members/${customer.id}`
+      );
+      return {
+        id: customer.id || 'N/A',
+        type: 'member',
+        full_name: customer.emailAddress || 'N/A"',
+        qty_checked_out_this_month: memberDoc.qty_checked_out_this_month || 0,
+        qty_metal: memberDoc.qty_metal,
+        qty_plastic: memberDoc.qty_plastic,
+        creation_date: parseISO(customer.createdAt || '1970-01-01'),
+        requires_sub_location: false,
+        parent_location_id: null,
+        default_container_type: '',
+        lat: null,
+        lng: null,
+        street_address: null,
+        city: null,
+        zip: null,
+      };
+    }
+  }
+
+  public static async getDropoffPointById(
+    squareClient: Client,
+    id: string
+  ): Promise<DishtruckLocation> {
+    const locationSquare = await squareClient.locationsApi.retrieveLocation(id);
+    if (!locationSquare?.result?.location) {
+      throw new Error('That location is not a dropoff point');
+    }
+    const dropoffPoints = await this.getFirestoreDocument(`dropoff-points/all`);
+
+    const dropoffPointDoc = _.find(dropoffPoints.locations, { id });
+    if (!dropoffPointDoc) {
+      throw new Error('That location is not a dropoff point');
+    }
+
+    const dop = locationSquare.result.location;
+
+    // Get inventory values as well
+    const plasticInventoryByLocation = await this.getInventoryCountsByLocation(
+      squareClient,
+      process.env.SQUARE_ITEM_VARIATION_PLASTIC || 'N/A'
     );
-    return recs.rows[0] || null;
+    const metalInventoryByLocation = await this.getInventoryCountsByLocation(
+      squareClient,
+      process.env.SQUARE_ITEM_VARIATION_METAL || 'N/A'
+    );
+
+    return {
+      id: dop.id || 'N/A',
+      type: 'dropoff-point' as const,
+      full_name: dop.name || 'N/A',
+      qty_checked_out_this_month: 0,
+      qty_metal: metalInventoryByLocation[dop.id || 'N/A'] || 0,
+      qty_plastic: plasticInventoryByLocation[dop.id || 'N/A'] || 0,
+      creation_date: parseISO(dop.createdAt || '1970-01-01'),
+      requires_sub_location: false,
+      parent_location_id: null,
+      default_container_type: '',
+      lat: dop.coordinates?.latitude || 0,
+      lng: dop.coordinates?.longitude || 0,
+      street_address: dop.address?.addressLine1 || '',
+      city: dop.address?.locality || '',
+      zip: dop.address?.postalCode || '',
+    };
+  }
+
+  private static async getDropoffPoints(
+    squareClient: Client
+  ): Promise<DishtruckLocation[]> {
+    // Get all locations from Square
+    const allLocationsSquare = await squareClient.locationsApi.listLocations();
+    const dropoffPoints = await this.getFirestoreDocument(`dropoff-points/all`);
+
+    const dropoffPointIds = _.map(dropoffPoints.locations, 'id');
+    const dropoffPointsSquare = _.filter(
+      allLocationsSquare.result.locations,
+      (loc: any) => dropoffPointIds.includes(loc.id)
+    );
+
+    // Get inventory values as well
+    const plasticInventoryByLocation = await this.getInventoryCountsByLocation(
+      squareClient,
+      process.env.SQUARE_ITEM_VARIATION_PLASTIC || 'N/A'
+    );
+    const metalInventoryByLocation = await this.getInventoryCountsByLocation(
+      squareClient,
+      process.env.SQUARE_ITEM_VARIATION_METAL || 'N/A'
+    );
+
+    return _.map(dropoffPointsSquare, (dop) => ({
+      id: dop.id || 'N/A',
+      type: 'dropoff-point' as const,
+      full_name: dop.name || 'N/A',
+      qty_checked_out_this_month: 0,
+      qty_metal: metalInventoryByLocation[dop.id || 'N/A'] || 0,
+      qty_plastic: plasticInventoryByLocation[dop.id || 'N/A'] || 0,
+      creation_date: parseISO(dop.createdAt || '1970-01-01'),
+      requires_sub_location: false,
+      parent_location_id: null,
+      default_container_type: '',
+      lat: dop.coordinates?.latitude || 0,
+      lng: dop.coordinates?.longitude || 0,
+      street_address: dop.address?.addressLine1 || '',
+      city: dop.address?.locality || '',
+      zip: dop.address?.postalCode || '',
+    }));
+  }
+
+  private static async getInventoryCountsByLocation(
+    squareClient: Client,
+    itemVariationId: string
+  ): Promise<_.Dictionary<any>> {
+    const itemInventory =
+      await squareClient.inventoryApi.retrieveInventoryCount(itemVariationId);
+    return _.chain(itemInventory.result.counts)
+      .map((loc: any) => [loc.locationId, loc.quantity])
+      .fromPairs()
+      .value();
+  }
+
+  public static async getFoodVendorById(
+    squareClient: Client,
+    id: string
+  ): Promise<DishtruckLocation> {
+    console.log(`Retrieving Location ${id} from Square`);
+    const locationSquare = await squareClient.locationsApi.retrieveLocation(id);
+    if (!locationSquare?.result?.location) {
+      throw new Error('That location is not a food vendor');
+    }
+    console.log(locationSquare.result);
+
+    console.log(`Retrieving Locations document from Firestore`);
+    const foodVendors = await this.getFirestoreDocument(`food-vendors/all`);
+
+    const foodVendorDoc = _.find(foodVendors.locations, { id });
+    if (!foodVendorDoc) {
+      throw new Error('That location is not a food vendor');
+    }
+
+    const fvs = locationSquare.result.location;
+
+    // Get inventory values as well
+    console.log(`Retrieving inventory of plastic`);
+    const plasticInventoryByLocation = await this.getInventoryCountsByLocation(
+      squareClient,
+      process.env.SQUARE_ITEM_VARIATION_PLASTIC || 'N/A'
+    );
+    console.log(plasticInventoryByLocation);
+    console.log(`Retrieving inventory of metal`);
+    const metalInventoryByLocation = await this.getInventoryCountsByLocation(
+      squareClient,
+      process.env.SQUARE_ITEM_VARIATION_METAL || 'N/A'
+    );
+    console.log(metalInventoryByLocation);
+
+    return {
+      id: fvs.id || 'N/A',
+      type: 'food-vendor' as const,
+      full_name: fvs.name || 'N/A',
+      qty_checked_out_this_month: 0,
+      qty_metal: metalInventoryByLocation[fvs.id || 'N/A'] || 0,
+      qty_plastic: plasticInventoryByLocation[fvs.id || 'N/A'] || 0,
+      creation_date: parseISO(fvs.createdAt || '1970-01-01'),
+      requires_sub_location: foodVendorDoc.requires_sub_location,
+      parent_location_id: foodVendorDoc.parent_location_id,
+      default_container_type: foodVendorDoc.default_container_type,
+      lat: null,
+      lng: null,
+      street_address: fvs.address?.addressLine1 || null,
+      city: fvs.address?.locality || null,
+      zip: fvs.address?.postalCode || null,
+    };
+  }
+
+  private static async getFoodVendors(
+    squareClient: Client,
+    filterFn: (x: any) => Boolean
+  ): Promise<DishtruckLocation[]> {
+    // Get all locations from Square
+    const allLocationsSquare = (await squareClient.locationsApi.listLocations())
+      .result.locations;
+    const allLocationsSquareAsObject = _.chain(allLocationsSquare)
+      .map((loc: any) => [loc.id, loc])
+      .fromPairs()
+      .value();
+    const foodVendors = await this.getFirestoreDocument(`food-vendors/all`);
+
+    // Get inventory values as well
+    const plasticInventoryByLocation = await this.getInventoryCountsByLocation(
+      squareClient,
+      process.env.SQUARE_ITEM_VARIATION_PLASTIC || 'N/A'
+    );
+    const metalInventoryByLocation = await this.getInventoryCountsByLocation(
+      squareClient,
+      process.env.SQUARE_ITEM_VARIATION_METAL || 'N/A'
+    );
+
+    return _.chain(foodVendors.locations)
+      .filter(filterFn) // Only get top-level listings here
+      .map((fv) => {
+        const fvs = allLocationsSquareAsObject[fv.id];
+        return {
+          id: fv.id,
+          type: 'food-vendor' as const,
+          full_name: fvs.name,
+          qty_checked_out_this_month: 0,
+          qty_metal: metalInventoryByLocation[fvs.id] || 0,
+          qty_plastic: plasticInventoryByLocation[fvs.id] || 0,
+          creation_date: parseISO(fvs.createdAt || '1970-01-01'),
+          requires_sub_location: fv.requires_sub_location,
+          parent_location_id: fv.parent_location_id,
+          default_container_type: fv.default_container_type,
+          lat: null,
+          lng: null,
+          street_address: fvs.address.addressLine1,
+          city: fvs.address?.locality,
+          zip: fvs.address?.postalCode,
+        };
+      })
+      .value();
   }
 
   public static async locationsWithType(
-    pgPool: Pool,
+    squareClient: Client,
     type: string,
     userId: string
-  ) {
-    if (type === 'me') {
-      const userRec = await this.locationByName(pgPool, 'member', userId);
-      if (userRec) {
-        return userRec;
-      } else {
-        return {
-          type: 'unknown-member',
-        };
-      }
+  ): Promise<DishtruckLocation | DishtruckLocation[] | null> {
+    switch (type) {
+      case 'me':
+        return await this.getMemberByEmail(squareClient, userId);
+      case 'food-vendor':
+        return await this.getFoodVendors(squareClient, (loc) =>
+          _.isNull(loc.parent_location_id)
+        );
+      case 'dropoff-point':
+        return await this.getDropoffPoints(squareClient);
+      default:
+        return [];
     }
-    if (!['food-vendor', 'dropoff-point'].includes(type)) {
-      throw new Error(
-        'Cannot ask for locations other than food-vendor or dropoff-point'
-      );
-    }
-    const recs = await pgPool.query(
-      'SELECT * FROM locations WHERE type=$1 AND COALESCE(parent_location_id,0) = 0',
-      [type]
-    );
-    return recs.rows;
   }
 
-  public static async sublocations(pgPool: Pool, parent_location_id: number) {
-    const recs = await pgPool.query(
-      "SELECT * FROM locations WHERE type='food-vendor' AND parent_location_id = $1",
-      [parent_location_id]
+  public static async sublocations(
+    squareClient: Client,
+    parent_location_id: string
+  ): Promise<DishtruckLocation[]> {
+    return await this.getFoodVendors(
+      squareClient,
+      (loc) => parent_location_id === loc.parent_location_id
     );
-    return recs.rows;
   }
 
-  public static async registerMe(pgPool: Pool, userId: string) {
+  public static async registerMe(
+    squareClient: Client,
+    userId: string
+  ): Promise<void> {
     // Make sure member doesn't already exist.  If so, then no-op
-    const userRec = await this.locationByName(pgPool, 'member', userId);
+    const userRec = await this.getMemberByEmail(squareClient, userId);
     if (!userRec) {
-      const insertTransactionSQL = `INSERT INTO locations(type, full_name, qty_metal, qty_plastic) VALUES ('member', $1, 0, 0)`;
-      await pgPool.query(insertTransactionSQL, [userId]);
+      const response = await squareClient.customersApi.createCustomer({
+        emailAddress: userId,
+        idempotencyKey: userId,
+      });
+
+      // Create a member with that same id in Firestore
+      const firestore = new Firestore();
+      const squareCustomer = response.result.customer;
+      if (!squareCustomer?.id) {
+        throw new Error(`WTF???`);
+      }
+
+      await firestore.collection('members').doc(squareCustomer.id).set({
+        id: squareCustomer.id,
+        email: squareCustomer.emailAddress,
+        qty_metal: 0,
+        qty_plastic: 0,
+      });
     }
   }
 
-  public static async getNonmemberLocationGroupsWithQtys(pgPool: Pool) {
-    const qry = await pgPool.query(
-      "SELECT * FROM locations WHERE type IN ('warehouse','dropoff-point','shrinkage') OR (type = 'food-vendor' and not requires_sub_location)"
-    );
-    const recs = qry.rows;
-    // Display these in the same order as they are onscreen
-    let grps = [
-      {
-        group: 'Warehouse',
-        locations: _.filter(recs, { type: 'warehouse' } as any),
-        qty_metal: 0,
-        qty_plastic: 0,
-      },
-      {
-        group: 'Food Vendors',
-        locations: _.filter(recs, { type: 'food-vendor' } as any),
-        qty_metal: 0,
-        qty_plastic: 0,
-      },
-      {
-        group: 'Members',
-        locations: [],
-        qty_metal: 0,
-        qty_plastic: 0,
-      },
-      {
-        group: 'Dropoff Points',
-        locations: _.filter(recs, { type: 'dropoff-point' } as any),
-        qty_metal: 0,
-        qty_plastic: 0,
-      },
-      {
-        group: 'Shrinkage',
-        locations: _.filter(recs, { type: 'shrinkage' } as any),
-        qty_metal: 0,
-        qty_plastic: 0,
-      },
-    ];
-    grps = grps.map((grp) => ({
-      ...grp,
-      qty_metal: _.sum(_.map(grp.locations, 'qty_metal')),
-      qty_plastic: _.sum(_.map(grp.locations, 'qty_plastic')),
-    }));
-
-    // Members are a special case - we don't get into details, only aggregate qtys
-    const aggRecs = await pgPool.query(
-      "SELECT SUM(qty_metal) as qty_metal, SUM(qty_plastic) as qty_plastic FROM locations WHERE type = 'member'"
-    );
-    grps[2].qty_metal = aggRecs.rows[0].qty_metal;
-    grps[2].qty_plastic = aggRecs.rows[0].qty_plastic;
-    return grps;
+  public static async getNonmemberLocationGroupsWithQtys(/* pgPool: Pool */) {
+    // const qry = await pgPool.query(
+    //   "SELECT * FROM locations WHERE type IN ('warehouse','dropoff-point','shrinkage') OR (type = 'food-vendor' and not requires_sub_location)"
+    // );
+    // const recs = qry.rows;
+    // // Display these in the same order as they are onscreen
+    // let grps = [
+    //   {
+    //     group: 'Warehouse',
+    //     locations: _.filter(recs, { type: 'warehouse' } as any),
+    //     qty_metal: 0,
+    //     qty_plastic: 0,
+    //   },
+    //   {
+    //     group: 'Food Vendors',
+    //     locations: _.filter(recs, { type: 'food-vendor' } as any),
+    //     qty_metal: 0,
+    //     qty_plastic: 0,
+    //   },
+    //   {
+    //     group: 'Members',
+    //     locations: [],
+    //     qty_metal: 0,
+    //     qty_plastic: 0,
+    //   },
+    //   {
+    //     group: 'Dropoff Points',
+    //     locations: _.filter(recs, { type: 'dropoff-point' } as any),
+    //     qty_metal: 0,
+    //     qty_plastic: 0,
+    //   },
+    //   {
+    //     group: 'Shrinkage',
+    //     locations: _.filter(recs, { type: 'shrinkage' } as any),
+    //     qty_metal: 0,
+    //     qty_plastic: 0,
+    //   },
+    // ];
+    // grps = grps.map((grp) => ({
+    //   ...grp,
+    //   qty_metal: _.sum(_.map(grp.locations, 'qty_metal')),
+    //   qty_plastic: _.sum(_.map(grp.locations, 'qty_plastic')),
+    // }));
+    // // Members are a special case - we don't get into details, only aggregate qtys
+    // const aggRecs = await pgPool.query(
+    //   "SELECT SUM(qty_metal) as qty_metal, SUM(qty_plastic) as qty_plastic FROM locations WHERE type = 'member'"
+    // );
+    // grps[2].qty_metal = aggRecs.rows[0].qty_metal;
+    // grps[2].qty_plastic = aggRecs.rows[0].qty_plastic;
+    // return grps;
   }
 
-  public static async getNonmemberLocationGroups(pgPool: Pool) {
-    const qry = await pgPool.query(
-      "SELECT * FROM locations WHERE type IN ('warehouse','dropoff-point','shrinkage') OR (type = 'food-vendor' and not requires_sub_location)"
-    );
-    const recs = qry.rows;
-    // Display these in the same order as they are onscreen
-    const grps = [
-      {
-        group: 'Warehouse',
-        locations: _.filter(recs, { type: 'warehouse' } as any),
-      },
-      {
-        group: 'Food Vendors',
-        locations: _.filter(recs, { type: 'food-vendor' } as any),
-      },
-      {
-        group: 'Dropoff Points',
-        locations: _.filter(recs, { type: 'dropoff-point' } as any),
-      },
-      {
-        group: 'Shrinkage',
-        locations: _.filter(recs, { type: 'shrinkage' } as any),
-      },
-    ];
-
-    return grps;
+  public static async getNonmemberLocationGroups(/* pgPool: Pool */) {
+    // const qry = await pgPool.query(
+    //   "SELECT * FROM locations WHERE type IN ('warehouse','dropoff-point','shrinkage') OR (type = 'food-vendor' and not requires_sub_location)"
+    // );
+    // const recs = qry.rows;
+    // // Display these in the same order as they are onscreen
+    // const grps = [
+    //   {
+    //     group: 'Warehouse',
+    //     locations: _.filter(recs, { type: 'warehouse' } as any),
+    //   },
+    //   {
+    //     group: 'Food Vendors',
+    //     locations: _.filter(recs, { type: 'food-vendor' } as any),
+    //   },
+    //   {
+    //     group: 'Dropoff Points',
+    //     locations: _.filter(recs, { type: 'dropoff-point' } as any),
+    //   },
+    //   {
+    //     group: 'Shrinkage',
+    //     locations: _.filter(recs, { type: 'shrinkage' } as any),
+    //   },
+    // ];
+    // return grps;
   }
 }

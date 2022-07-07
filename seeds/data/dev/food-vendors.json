@@ -1,0 +1,44 @@
+{
+  "locations": [
+    {
+      "id": "L3MHD00NBQQ6R",
+      "type": "food-vendor",
+      "parent_location_id": null,
+      "requires_sub_location": true,
+      "default_container_type": "plastic",
+      "full_name": "Grassroots Music Festival"
+    },
+    {
+      "id": "LGANFYJN4CDHP",
+      "type": "food-vendor",
+      "parent_location_id": "L3MHD00NBQQ6R",
+      "requires_sub_location": false,
+      "default_container_type": "plastic",
+      "full_name": "Grassroots #1"
+    },
+    {
+      "id": "L863B72AJQK4W",
+      "type": "food-vendor",
+      "parent_location_id": "L3MHD00NBQQ6R",
+      "requires_sub_location": false,
+      "default_container_type": "plastic",
+      "full_name": "Grassroots #2"
+    },
+    {
+      "id": "LVK37WZ80ZB2G",
+      "type": "food-vendor",
+      "parent_location_id": "L3MHD00NBQQ6R",
+      "requires_sub_location": false,
+      "default_container_type": "plastic",
+      "full_name": "Grassroots #3"
+    },
+    {
+      "id": "LTD0VW2FDVJN5",
+      "type": "food-vendor",
+      "parent_location_id": "null",
+      "requires_sub_location": false,
+      "default_container_type": "metal",
+      "full_name": "Greenstar"
+    }
+  ]
+}

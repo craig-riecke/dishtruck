@@ -44,8 +44,6 @@ export class CheckoutContainersComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.memberRecord$ = this.locationService.getMyMemberRecord();
     this.foodVendors$ = this.locationService.getFoodVendors();
-    // There is only one for now, so don't make it too complicated
-    this.foodSubVendors$ = this.locationService.getSubLocations(1);
   }
 
   @ViewChild('stepper') private myStepper: MatStepper;
@@ -54,6 +52,9 @@ export class CheckoutContainersComponent implements OnInit, OnDestroy {
     if (foodVendor.requires_sub_location) {
       this.showSubLocations = true;
       this.signoutForm.controls['from_location_id'].setValue(foodVendor.id);
+      this.foodSubVendors$ = this.locationService.getSubLocations(
+        foodVendor.id
+      );
     } else {
       if (foodVendor.parent_location_id) {
         this.signoutForm.controls['from_sublocation_id'].setValue(

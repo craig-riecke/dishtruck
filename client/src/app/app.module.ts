@@ -26,7 +26,10 @@ import { DropoffContainersComponent } from './dropoff-containers/dropoff-contain
 import { FindDropoffComponent } from './find-dropoff/find-dropoff.component';
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { environment } from '../environments/environment';
-import { GoogleLoginProvider, SocialLoginModule } from 'angularx-social-login';
+import {
+  GoogleLoginProvider,
+  SocialLoginModule,
+} from '@abacritt/angularx-social-login';
 import { AuthGuard } from './auth.guard';
 import { LoginComponent } from './login/login.component';
 import { customInterceptorProviders } from './custom-interceptors/index';
@@ -84,9 +87,7 @@ import { SupportComponent } from './support/support.component';
         providers: [
           {
             id: GoogleLoginProvider.PROVIDER_ID,
-            provider: new GoogleLoginProvider(
-              '952379108326-ct5jshq38p20tr910lnkh57c0hdqqf75.apps.googleusercontent.com'
-            ), // your client id
+            provider: new GoogleLoginProvider(environment.OAUTH2_CLIENT_ID), // your client id
           },
         ],
       },

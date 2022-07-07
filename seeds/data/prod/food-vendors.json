@@ -1,0 +1,18 @@
+[
+  {
+    "id": "LFZ0HJDN92A1Z",
+    "type": "food-vendor",
+    "parent_location_id": null,
+    "requires_sub_location": false,
+    "default_container_type": "plastic",
+    "full_name": "Grassroots Music Festival"
+  },
+  {
+    "id": "L8WZDWTJE9C19",
+    "type": "food-vendor",
+    "parent_location_id": "null",
+    "requires_sub_location": false,
+    "default_container_type": "metal",
+    "full_name": "Greenstar"
+  }
+]

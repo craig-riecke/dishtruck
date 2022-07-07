@@ -4,7 +4,7 @@ import {
   GoogleLoginProvider,
   SocialAuthService,
   SocialUser,
-} from 'angularx-social-login';
+} from '@abacritt/angularx-social-login';
 import { firstValueFrom } from 'rxjs';
 import { CurrentUserService } from '../services/current-user.service';
 import {
@@ -39,6 +39,9 @@ export class LoginComponent {
         this.router.navigate([
           dishtruckUser.type === 'unknown-member' ? 'become-a-member' : 'home',
         ]);
+      })
+      .catch((error) => {
+        console.log(error);
       });
   }
 

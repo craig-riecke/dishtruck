@@ -1,5 +1,5 @@
+import { Client, Environment } from 'square';
 import { HttpFunction } from '@google-cloud/functions-framework/build/src/functions';
-import { Pool, PoolConfig } from 'pg';
 import * as dotenv from 'dotenv';
 import { LocationsService } from './services/locations.service';
 import { TransactionsService } from './services/transactions.service';
@@ -7,29 +7,19 @@ import * as _ from 'lodash';
 import * as jwt from 'jsonwebtoken';
 var jwksClient = require('jwks-rsa');
 
+require('source-map-support').install();
+
 dotenv.config();
+const tier = process.env.TIER;
+
+const squareClient = new Client({
+  accessToken: process.env.SQUARE_ACCESS_TOKEN,
+  environment: tier === 'prod' ? Environment.Production : Environment.Sandbox,
+});
 
 export const helloWorld: HttpFunction = (req, res) => {
   res.json('Hello, World from TypeScript');
 };
-
-const createUnixSocketPool = async (config: PoolConfig | undefined) => {
-  const dbSocketPath = process.env.DB_SOCKET_PATH || '/cloudsql';
-
-  // Establish a connection to the database
-  return new Pool({
-    user: process.env.DB_USER, // e.g. 'my-db-user'
-    password: process.env.DB_PASS, // e.g. 'my-db-password'
-    database: process.env.DB_NAME, // e.g. 'my-database'
-    host:
-      process.env.NODE_ENV === 'production'
-        ? `${dbSocketPath}/${process.env.INSTANCE_CONNECTION_NAME}`
-        : process.env.DB_HOST,
-    ...config,
-  });
-};
-
-let pgPool: Pool;
 
 const jwtPrincipal = async (authHeader: string) => {
   const jwToken = authHeader.split(/ /)[1];
@@ -87,27 +77,24 @@ export const locations: HttpFunction = async (req: any, res) => {
     const type = extractSubject(req);
     console.log(`Looking for type ${type}`);
 
-    console.log('Checking for Postgres pool');
-    if (!pgPool) {
-      console.log('Starting up Postgres Pool');
-      pgPool = await createUnixSocketPool({});
-      console.log('Postgres Pool Started');
-    }
-
     console.log('Running query');
 
     // register-member is an outlier since it doesn't return anything
-    let locations = [];
+    let locations: any;
     if (type === 'register-me') {
-      await LocationsService.registerMe(pgPool, thisUserId);
+      await LocationsService.registerMe(squareClient, thisUserId);
     } else {
       locations =
         type === 'sublocations'
           ? await LocationsService.sublocations(
-              pgPool,
-              _.toInteger(req.query.parent_location_id)
+              squareClient,
+              req.query.parent_location_id
             )
-          : await LocationsService.locationsWithType(pgPool, type, thisUserId);
+          : await LocationsService.locationsWithType(
+              squareClient,
+              type,
+              thisUserId
+            );
     }
     console.log('Query ended');
     res.json(locations);
@@ -133,18 +120,11 @@ export const transactions: HttpFunction = async (req: any, res) => {
     const type = extractSubject(req);
     console.log(`Transcation type ${type}`);
 
-    console.log('Checking for Postgres pool');
-    if (!pgPool) {
-      console.log('Starting up Postgres Pool');
-      pgPool = await createUnixSocketPool({});
-      console.log('Postgres Pool Started');
-    }
-
     console.log('Running trx');
     switch (type) {
       case 'checkout-container':
         await TransactionsService.checkoutContainer(
-          pgPool,
+          squareClient,
           thisUserId,
           req.body.qty,
           req.body.from_location_id
@@ -152,7 +132,7 @@ export const transactions: HttpFunction = async (req: any, res) => {
         break;
       case 'return-container':
         await TransactionsService.returnContainer(
-          pgPool,
+          squareClient,
           thisUserId,
           req.body.qty_metal,
           req.body.qty_plastic,
@@ -171,90 +151,90 @@ export const transactions: HttpFunction = async (req: any, res) => {
   }
 };
 
-export const admin: HttpFunction = async (req: any, res) => {
-  try {
-    if (isCorsPreflight(req, res)) {
-      return;
-    }
+// export const admin: HttpFunction = async (req: any, res) => {
+//   try {
+//     if (isCorsPreflight(req, res)) {
+//       return;
+//     }
 
-    console.log('Checking for Postgres pool');
-    if (!pgPool) {
-      console.log('Starting up Postgres Pool');
-      pgPool = await createUnixSocketPool({});
-      console.log('Postgres Pool Started');
-    }
+//     console.log('Checking for Postgres pool');
+//     if (!pgPool) {
+//       console.log('Starting up Postgres Pool');
+//       pgPool = await createUnixSocketPool({});
+//       console.log('Postgres Pool Started');
+//     }
 
-    const type = extractSubject(req);
-    console.log(`Transcation type ${type}`);
+//     const type = extractSubject(req);
+//     console.log(`Transcation type ${type}`);
 
-    // All admin points are locked down except /locations, which is needed for the sidebar
-    if (type !== 'locations') {
-      const thisUser: any = await jwtPrincipal(req.headers.authorization);
-      const thisUserId = thisUser.email;
+//     // All admin points are locked down except /locations, which is needed for the sidebar
+//     if (type !== 'locations') {
+//       const thisUser: any = await jwtPrincipal(req.headers.authorization);
+//       const thisUserId = thisUser.email;
 
-      const adminRecord = LocationsService.locationByName(
-        pgPool,
-        'admin',
-        thisUserId
-      );
+//       const adminRecord = LocationsService.locationByName(
+//         pgPool,
+//         'admin',
+//         thisUserId
+//       );
 
-      if (!adminRecord) {
-        res
-          .status(403)
-          .json({ error: 'You are not authorized to use this API' });
-      }
-    }
+//       if (!adminRecord) {
+//         res
+//           .status(403)
+//           .json({ error: 'You are not authorized to use this API' });
+//       }
+//     }
 
-    console.log('Running trx');
+//     console.log('Running trx');
 
-    switch (type) {
-      case 'transactions':
-        switch (req.method) {
-          case 'GET':
-            const trx = await TransactionsService.getHistory(
-              pgPool,
-              req.query.location_id,
-              req.query.from,
-              req.query.to
-            );
-            res.json(trx);
-            break;
-          case 'POST':
-            await TransactionsService.adminTransaction(
-              pgPool,
-              req.body.from_location_id,
-              req.body.to_location_id,
-              req.body.qty_metal,
-              req.body.qty_plastic
-            );
-            res.status(204).send('');
-            break;
-        }
-        break;
-      case 'invoice':
-        const invoice = await TransactionsService.getInvoice(
-          pgPool,
-          req.query.location_id,
-          req.query.from,
-          req.query.to
-        );
-        res.json(invoice);
-        break;
-      case 'locations-with-qtys':
-        const locationGroupsWithQtys =
-          await LocationsService.getNonmemberLocationGroupsWithQtys(pgPool);
-        res.json(locationGroupsWithQtys);
-        break;
-      case 'locations':
-        const locationGroups =
-          await LocationsService.getNonmemberLocationGroups(pgPool);
-        res.json(locationGroups);
-        break;
-    }
-    console.log('Trx ended');
-  } catch (err: any) {
-    const wrappedError = new Error(err);
-    console.error(`${err.stack}\n${wrappedError.stack}`);
-    res.status(500).json({ error: 'An error occurred in that transaction' });
-  }
-};
+//     switch (type) {
+//       case 'transactions':
+//         switch (req.method) {
+//           case 'GET':
+//             const trx = await TransactionsService.getHistory(
+//               pgPool,
+//               req.query.location_id,
+//               req.query.from,
+//               req.query.to
+//             );
+//             res.json(trx);
+//             break;
+//           case 'POST':
+//             await TransactionsService.adminTransaction(
+//               pgPool,
+//               req.body.from_location_id,
+//               req.body.to_location_id,
+//               req.body.qty_metal,
+//               req.body.qty_plastic
+//             );
+//             res.status(204).send('');
+//             break;
+//         }
+//         break;
+//       case 'invoice':
+//         const invoice = await TransactionsService.getInvoice(
+//           pgPool,
+//           req.query.location_id,
+//           req.query.from,
+//           req.query.to
+//         );
+//         res.json(invoice);
+//         break;
+//       case 'locations-with-qtys':
+//         const locationGroupsWithQtys =
+//           await LocationsService.getNonmemberLocationGroupsWithQtys(pgPool);
+//         res.json(locationGroupsWithQtys);
+//         break;
+//       case 'locations':
+//         const locationGroups =
+//           await LocationsService.getNonmemberLocationGroups(pgPool);
+//         res.json(locationGroups);
+//         break;
+//     }
+//     console.log('Trx ended');
+//   } catch (err: any) {
+//     const wrappedError = new Error(err);
+//     console.error(`${err.stack}\n${wrappedError.stack}`);
+//     res.status(500).json({ error: 'An error occurred in that transaction' });
+//   }
+// };

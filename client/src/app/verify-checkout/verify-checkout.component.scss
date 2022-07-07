@@ -5,9 +5,13 @@
 }
 
 .qty-confirmation {
-  height: 300px;
-  width: 300px;
-  font-size: 128px;
+  height: 250px;
+  width: 250px;
+  font-size: 100px;
   border-radius: 50%;
   background-image: linear-gradient(to bottom, #a8d08c, #122e0c);
+}
+
+.confirm-timestamp {
+  font-size: 20px;
 }

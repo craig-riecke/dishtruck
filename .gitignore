@@ -70,6 +70,8 @@ typings/
 
 # dotenv environment variables file
 .env
+.env.dev
+.env.prod
 .env.test
 
 # parcel-bundler cache (https://parceljs.org/)
@@ -104,5 +106,7 @@ dist
 .tern-port
 
 .env.yaml
+.env-dev.yaml
+.env-prod.yaml
 # Don't need compiled JS, just TypeScript
 *.js

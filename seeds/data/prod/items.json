@@ -1,0 +1,63 @@
+[
+  {
+    "idempotencyKey": "bb76c1dd-6b17-4652-8752-665da1b3d980",
+    "id": "#Takeout",
+    "type": "ITEM",
+    "itemData": {
+      "name": "Takeout Container",
+      "description": "Takeout Container",
+      "variations": [
+        {
+          "type": "ITEM_VARIATION",
+          "id": "#Plastic",
+          "itemVariationData": {
+            "name": "Plastic",
+            "pricingType": "FIXED_PRICING",
+            "stockable": true,
+            "priceMoney": {
+              "amount": 0,
+              "currency": "USD"
+            }
+          }
+        },
+        {
+          "type": "ITEM_VARIATION",
+          "id": "#Metal",
+          "itemVariationData": {
+            "name": "Metal",
+            "pricingType": "FIXED_PRICING",
+            "stockable": true,
+            "priceMoney": {
+              "amount": 0,
+              "currency": "USD"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "idempotencyKey": "bb76c1dd-6b17-4652-8752-665da1b3d981",
+    "id": "#MonthlyTakeoutCharge",
+    "type": "ITEM",
+    "itemData": {
+      "name": "Takeout Containers Signed Out",
+      "description": "Takeout Containers Signed Out This Month",
+      "variations": [
+        {
+          "type": "ITEM_VARIATION",
+          "id": "#Charge",
+          "itemVariationData": {
+            "name": "Charge",
+            "pricingType": "FIXED_PRICING",
+            "stockable": true,
+            "priceMoney": {
+              "amount": 100,
+              "currency": "USD"
+            }
+          }
+        }
+      ]
+    }
+  }
+]

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { SocialUser } from 'angularx-social-login';
+import { SocialUser } from '@abacritt/angularx-social-login';
 
 @Injectable({
   providedIn: 'root',

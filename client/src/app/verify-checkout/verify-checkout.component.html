@@ -17,7 +17,9 @@
       </div>
 
       <br /><br />
-      <div>Confirmed on {{ verifyDetails.timestamp | date: "medium" }}</div>
+      <div class="confirm-timestamp">
+        {{ verifyDetails.timestamp | date: "medium" }}
+      </div>
       <br /><br />
       <a href="/" mat-raised-button> All done! </a>
     </div>

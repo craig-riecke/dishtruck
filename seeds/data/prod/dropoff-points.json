@@ -1,0 +1,22 @@
+[
+  {
+    "id": "LR69953Z08WXK",
+    "type": "dropoff-point",
+    "full_name": "Greenstar - Dropoff",
+    "lat": 42.44543,
+    "lng": -76.5098,
+    "street_address": "770 Cascadilla St",
+    "city": "Ithaca",
+    "zip": "14850"
+  },
+  {
+    "id": "LCZHBZPS7ZXXY",
+    "type": "dropoff-point",
+    "full_name": "Grassroots Music Festival - Dropoff",
+    "lat": 42.53591,
+    "lng": -76.64648,
+    "street_address": "2150 Trumansburg Rd",
+    "city": "Trumansburg",
+    "zip": "14850"
+  }
+]
