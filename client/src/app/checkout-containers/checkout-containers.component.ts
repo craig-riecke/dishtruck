@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { forkJoin, map, Observable, Subscription } from 'rxjs';
 import {
   DishtruckLocation,
@@ -21,10 +21,10 @@ export class CheckoutContainersComponent implements OnInit, OnDestroy {
   foodVendors$: Observable<DishtruckLocation[]>;
   foodSubVendors$: Observable<DishtruckLocation[]>;
   containerNumbers = range(1, 10);
-  signoutForm = new FormGroup({
-    from_location_id: new FormControl(null, Validators.required),
-    from_sublocation_id: new FormControl(null),
-    qty: new FormControl(null, Validators.required),
+  signoutForm = new UntypedFormGroup({
+    from_location_id: new UntypedFormControl(null, Validators.required),
+    from_sublocation_id: new UntypedFormControl(null),
+    qty: new UntypedFormControl(null, Validators.required),
   });
   saving = false;
   selectedfoodVendorId: number | null = null;

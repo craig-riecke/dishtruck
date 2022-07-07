@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { range, toInteger } from 'lodash-es';
 import { filter, map, Subscription, switchMap, tap } from 'rxjs';
@@ -18,9 +18,9 @@ export class DropoffContainersComponent implements OnInit, OnDestroy {
   dropoffSubscription: Subscription;
   saveSubscription: Subscription;
   containerNumbers: { plastic: number[]; metal: number[] };
-  dropoffForm = new FormGroup({
-    qty_metal: new FormControl(0, Validators.required),
-    qty_plastic: new FormControl(0, Validators.required),
+  dropoffForm = new UntypedFormGroup({
+    qty_metal: new UntypedFormControl(0, Validators.required),
+    qty_plastic: new UntypedFormControl(0, Validators.required),
   });
   saving = false;
   dropoffPoint?: DishtruckLocation;
