@@ -26,7 +26,7 @@
   },
   "scripts": {
     "start": "tsc && functions-framework --target",
-    "deploy:dev": "tsc && gcloud functions deploy --runtime nodejs16 --trigger-http --allow-unauthenticated --project=dishtruck --env-vars-file .env.yaml --service-account locations-member@dishtruck.iam.gserviceaccount.com",
+    "deploy:dev": "tsc && gcloud functions deploy --runtime nodejs16 --trigger-http --allow-unauthenticated --project=dishtruck --env-vars-file .env-dev.yaml --service-account locations-member@dishtruck.iam.gserviceaccount.com",
     "deploy:prod": "tsc && gcloud functions deploy --runtime nodejs16 --trigger-http --allow-unauthenticated --project=dishtruck-production --env-vars-file .env-prod.yaml --service-account firestore-client@dishtruck-production.iam.gserviceaccount.com"
   },
   "author": "Craig Riecke",

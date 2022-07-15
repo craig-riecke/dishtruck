@@ -28,13 +28,13 @@ import { ServiceWorkerModule } from '@angular/service-worker';
 import { environment } from '../environments/environment';
 import {
   GoogleLoginProvider,
+  SocialAuthServiceConfig,
   SocialLoginModule,
 } from '@abacritt/angularx-social-login';
 import { AuthGuard } from './auth.guard';
 import { LoginComponent } from './login/login.component';
 import { customInterceptorProviders } from './custom-interceptors/index';
 import { BecomeAMemberComponent } from './become-a-member/become-a-member.component';
-import { AgmCoreModule } from '@agm/core';
 import { HowItWorksComponent } from './how-it-works/how-it-works.component';
 import { SupportComponent } from './support/support.component';
 
@@ -75,9 +75,6 @@ import { SupportComponent } from './support/support.component';
       registrationStrategy: 'registerWhenStable:30000',
     }),
     SocialLoginModule,
-    AgmCoreModule.forRoot({
-      apiKey: 'AIzaSyDqhttlxNWY2Vlcq7LdKWQQw0gJh57WH_0',
-    }),
   ],
   providers: [
     {
@@ -90,7 +87,10 @@ import { SupportComponent } from './support/support.component';
             provider: new GoogleLoginProvider(environment.OAUTH2_CLIENT_ID), // your client id
           },
         ],
-      },
+        onError: (err: any) => {
+          console.error(err);
+        },
+      } as SocialAuthServiceConfig,
     },
     AuthGuard,
     customInterceptorProviders,

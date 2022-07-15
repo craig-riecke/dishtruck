@@ -8,17 +8,19 @@
     <div>
       <h1>Thank you!</h1>
 
-      <div>Please show this screen to {{ verifyDetails.food_vendor_name }}</div>
+      <div>
+        Please show this screen to {{ verifyDetails?.food_vendor_name }}
+      </div>
 
       <br />
 
       <div class="qty-confirmation">
-        {{ verifyDetails.qty }}
+        {{ verifyDetails?.qty }}
       </div>
 
       <br /><br />
       <div class="confirm-timestamp">
-        {{ verifyDetails.timestamp | date: "medium" }}
+        {{ verifyDetails?.timestamp | date: "medium" }}
       </div>
       <br /><br />
       <a href="/" mat-raised-button> All done! </a>

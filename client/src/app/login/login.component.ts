@@ -1,11 +1,7 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import {
-  GoogleLoginProvider,
-  SocialAuthService,
-  SocialUser,
-} from '@abacritt/angularx-social-login';
-import { firstValueFrom } from 'rxjs';
+import { SocialAuthService, SocialUser } from '@abacritt/angularx-social-login';
+import { filter, tap, switchMap } from 'rxjs';
 import { CurrentUserService } from '../services/current-user.service';
 import {
   DishtruckLocation,
@@ -25,27 +21,27 @@ export class LoginComponent {
     private locationService: LocationService
   ) {}
 
-  loginWithGoogle(): void {
-    let socialUser: SocialUser | null = null;
-    this.socialAuthService
-      .signIn(GoogleLoginProvider.PROVIDER_ID)
-      .then((user) => {
-        socialUser = user;
-        this.currentUserService.setCurrentUser(socialUser);
-        // Lookup their Dishtruck record, if it exists
-        return firstValueFrom(this.locationService.getMyMemberRecord());
-      })
-      .then((dishtruckUser: DishtruckLocation) => {
-        this.router.navigate([
-          dishtruckUser.type === 'unknown-member' ? 'become-a-member' : 'home',
-        ]);
-      })
-      .catch((error) => {
-        console.log(error);
+  ngOnInit() {
+    this.socialAuthService.authState
+      .pipe(
+        // Just ignore logouts
+        filter((socialUser: SocialUser) => !!socialUser),
+        // Save Google information in service so others can get to it
+        tap((socialUser: SocialUser) =>
+          this.currentUserService.setCurrentUser(socialUser)
+        ),
+        // Get member record information from our functions, if it exists.  This sends the
+        // user information as a JWT
+        switchMap(() => this.locationService.getMyMemberRecord())
+      )
+      .subscribe((dishtruckUser: DishtruckLocation | null) => {
+        let redirectUrl = 'home';
+        if (!dishtruckUser) {
+          redirectUrl = 'become-a-member';
+        } else if (this.currentUserService.redirectUrl) {
+          redirectUrl = this.currentUserService.redirectUrl;
+        }
+        this.router.navigateByUrl(redirectUrl);
       });
-  }
-
-  loginWithApple(): void {
-    alert('Sorry, apple login is not supportwed in this demo.');
   }
 }

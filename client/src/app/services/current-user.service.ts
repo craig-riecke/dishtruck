@@ -6,6 +6,7 @@ import { SocialUser } from '@abacritt/angularx-social-login';
 })
 export class CurrentUserService {
   private currentUser: SocialUser | null = null;
+  redirectUrl?: string;
 
   constructor() {}
 

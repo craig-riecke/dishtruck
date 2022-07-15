@@ -4,7 +4,8 @@
 
 export const environment = {
   production: false,
-  DISHTRUCK_API_BASE_URL: 'https://us-central1-dishtruck.cloudfunctions.net',
+  DISHTRUCK_API_BASE_URL: 'http://localhost:8080',
+  // 'https://us-central1-dishtruck.cloudfunctions.net',
 };
 
 /*

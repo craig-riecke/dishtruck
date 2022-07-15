@@ -1,5 +1,9 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
+import {
+  UntypedFormControl,
+  UntypedFormGroup,
+  Validators,
+} from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { range, toInteger } from 'lodash-es';
 import { filter, map, Subscription, switchMap, tap } from 'rxjs';
@@ -37,9 +41,7 @@ export class DropoffContainersComponent implements OnInit, OnDestroy {
     let dropoffLocationId = 0;
     this.dropoffSubscription = this.route.params
       .pipe(
-        tap(
-          (params) => (dropoffLocationId = toInteger(params['to_location_id']))
-        ),
+        tap((params) => (dropoffLocationId = params['to_location_id'])),
         switchMap(() => this.locationService.getDropoffPoints()),
         map((resp) => resp.find((loc) => loc.id === dropoffLocationId)),
         tap((resp) => (this.dropoffPoint = resp)),
