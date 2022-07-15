@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { BehaviorSubject, Observable, Subscription } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
@@ -29,15 +29,15 @@ export class LocationComponent implements OnInit, OnDestroy {
   trxHistory$: BehaviorSubject<TransactionHistory> =
     new BehaviorSubject<TransactionHistory>(this.loadingSentinel);
   location_id?: number;
-  dateRangeForm = new FormGroup({
-    start: new FormControl(startOfMonth(new Date())),
-    end: new FormControl(endOfMonth(new Date())),
+  dateRangeForm = new UntypedFormGroup({
+    start: new UntypedFormControl(startOfMonth(new Date())),
+    end: new UntypedFormControl(endOfMonth(new Date())),
   });
-  moveTrxForm = new FormGroup({
-    from_location_id: new FormControl(null),
-    to_location_id: new FormControl(null, Validators.required),
-    qty_metal: new FormControl(0, Validators.required),
-    qty_plastic: new FormControl(0, Validators.required),
+  moveTrxForm = new UntypedFormGroup({
+    from_location_id: new UntypedFormControl(null),
+    to_location_id: new UntypedFormControl(null, Validators.required),
+    qty_metal: new UntypedFormControl(0, Validators.required),
+    qty_plastic: new UntypedFormControl(0, Validators.required),
   });
   locationGroups$: Observable<LocationGroup[]>;
   postSubscription?: Subscription;
