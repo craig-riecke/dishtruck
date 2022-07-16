@@ -355,6 +355,8 @@ export class LocationsService {
       {
         group: 'Warehouse',
         locations: [specialLocations.warehouse],
+        qty_metal: 0, // Adding these to the first element fixes the type
+        qty_plastic: 0,
       },
       {
         group: 'Food Vendors',
@@ -378,12 +380,15 @@ export class LocationsService {
       qty_metal: _.sum(_.map(grp.locations, 'qty_metal')),
       qty_plastic: _.sum(_.map(grp.locations, 'qty_plastic')),
     }));
-    // // Members are a special case - we don't get into details, only aggregate qtys
-    // const aggRecs = await pgPool.query(
-    //   "SELECT SUM(qty_metal) as qty_metal, SUM(qty_plastic) as qty_plastic FROM locations WHERE type = 'member'"
-    // );
-    // grps[2].qty_metal = aggRecs.rows[0].qty_metal;
-    // grps[2].qty_plastic = aggRecs.rows[0].qty_plastic;
+    // Members are a special case - we don't get into details, only aggregate qtys.  Note this
+    // might get really bad later if we have lots of members.
+    const firestore = new Firestore();
+    const querySnapshot = await firestore.collection('members').get();
+    querySnapshot.docs.forEach(async (element) => {
+      const doc = element.data();
+      grps[2].qty_metal += doc.qty_metal;
+      grps[2].qty_plastic += doc.qty_plastic;
+    });
     return grps;
   }
 
