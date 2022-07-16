@@ -4,8 +4,9 @@
 
 export const environment = {
   production: false,
-  DISHTRUCK_API_BASE_URL: 'http://localhost:8080',
-  // 'https://us-central1-dishtruck.cloudfunctions.net',
+  DISHTRUCK_API_BASE_URL:
+    // 'http://localhost:8080',
+    'https://us-central1-dishtruck.cloudfunctions.net',
   OAUTH2_CLIENT_ID:
     '952379108326-ct5jshq38p20tr910lnkh57c0hdqqf75.apps.googleusercontent.com', // Dev
 };

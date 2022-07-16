@@ -77,7 +77,7 @@ export class AdminService {
 
   getLocation(type: string, id: string): Observable<DishtruckLocation> {
     return this.http.get<DishtruckLocation>(
-      `${environment.DISHTRUCK_API_BASE_URL}/location/${type}?id=${id}`
+      `${environment.DISHTRUCK_API_BASE_URL}/admin/${type}?id=${id}`
     );
   }
 }
