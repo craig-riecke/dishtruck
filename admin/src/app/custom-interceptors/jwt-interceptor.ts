@@ -7,7 +7,7 @@ import {
 } from '@angular/common/http';
 
 import { Observable } from 'rxjs';
-import { SocialUser } from 'angularx-social-login';
+import { SocialUser } from '@abacritt/angularx-social-login';
 import { CurrentUserService } from '../services/current-user.service';
 
 @Injectable()

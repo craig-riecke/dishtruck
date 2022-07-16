@@ -26,12 +26,6 @@ export interface TransactionHistory {
   current_balance: Balance;
 }
 
-export interface Invoice {
-  location_name: string;
-  transactions: Transaction[];
-  invoice_balance: Balance;
-}
-
 export class TransactionsService {
   public static async checkoutContainer(
     squareClient: Client,
@@ -165,7 +159,7 @@ export class TransactionsService {
           catalogObjectId: process.env.SQUARE_ITEM_VARIATION_PLASTIC || 'N/A',
           quantity: qty_plastic.toString(),
           occurredAt: new Date().toISOString(),
-          reference_id: `${userId} returned ${qty_metal} metal and ${qty_plastic} plastic containers`,
+          reference_id: `${userId} returned ${qty_plastic} plastic containers`,
         },
       });
     }
@@ -179,6 +173,7 @@ export class TransactionsService {
           catalogObjectId: process.env.SQUARE_ITEM_VARIATION_METAL || 'N/A',
           quantity: qty_metal.toString(),
           occurredAt: new Date().toISOString(),
+          reference_id: `${userId} returned ${qty_metal} metal containers`,
         },
       });
     }
@@ -197,5 +192,107 @@ export class TransactionsService {
 
     const firestore = new Firestore();
     await firestore.collection('members').doc(userRec.id).set(userRec);
+  }
+
+  public static async adminTransaction(
+    squareClient: Client,
+    userId: string,
+    from_type: string,
+    from_location_id: string,
+    to_type: string,
+    to_location_id: string,
+    qty_metal: number,
+    qty_plastic: number
+  ) {
+    const squareChanges = [];
+    // First decrement the qty from the from location
+    if (from_type === 'food-vendor' || from_type === 'dropoff-point') {
+      // decrement from Square
+      if (qty_plastic) {
+        squareChanges.push({
+          type: 'ADJUSTMENT',
+          adjustment: {
+            fromState: 'IN_STOCK',
+            toState: 'SOLD',
+            locationId: from_location_id,
+            catalogObjectId: process.env.SQUARE_ITEM_VARIATION_PLASTIC || 'N/A',
+            quantity: qty_plastic.toString(),
+            occurredAt: new Date().toISOString(),
+            reference_id: `${userId} moved ${qty_plastic} plastic containers from location ${from_location_id}`,
+          },
+        });
+      }
+      if (qty_metal) {
+        squareChanges.push({
+          type: 'ADJUSTMENT',
+          adjustment: {
+            fromState: 'IN_STOCK',
+            toState: 'SOLD',
+            locationId: from_location_id,
+            catalogObjectId: process.env.SQUARE_ITEM_VARIATION_METAL || 'N/A',
+            quantity: qty_metal.toString(),
+            occurredAt: new Date().toISOString(),
+            reference_id: `${userId} moved ${qty_metal} metal containers from location ${from_location_id}`,
+          },
+        });
+      }
+    } else if (from_type === 'special-location') {
+      const specialLocations = await LocationsService.getSpecialLocations();
+      specialLocations[from_location_id].qty_metal -= qty_metal;
+      specialLocations[from_location_id].qty_plastic -= qty_plastic;
+      await LocationsService.saveSpecialLocations(specialLocations);
+    } else {
+      throw new Error('Cannot move inventory from member or other locations');
+    }
+
+    // Second, increment the qty at the to location
+    if (to_type === 'food-vendor' || to_type === 'dropoff-point') {
+      // increment from Square
+      if (qty_plastic) {
+        squareChanges.push({
+          type: 'ADJUSTMENT',
+          adjustment: {
+            fromState: 'NONE',
+            toState: 'IN_STOCK',
+            locationId: to_location_id,
+            catalogObjectId: process.env.SQUARE_ITEM_VARIATION_PLASTIC || 'N/A',
+            quantity: qty_plastic.toString(),
+            occurredAt: new Date().toISOString(),
+            reference_id: `${userId} moved ${qty_plastic} plastic containers to location ${to_location_id}`,
+          },
+        });
+      }
+      if (qty_metal) {
+        squareChanges.push({
+          type: 'ADJUSTMENT',
+          adjustment: {
+            fromState: 'NONE',
+            toState: 'IN_STOCK',
+            locationId: to_location_id,
+            catalogObjectId: process.env.SQUARE_ITEM_VARIATION_METAL || 'N/A',
+            quantity: qty_metal.toString(),
+            occurredAt: new Date().toISOString(),
+            reference_id: `${userId} moved ${qty_metal} metal containers to location ${to_location_id}`,
+          },
+        });
+      }
+    } else if (to_type === 'special-location') {
+      const specialLocations = await LocationsService.getSpecialLocations();
+      specialLocations[to_location_id].qty_metal += qty_metal;
+      specialLocations[to_location_id].qty_plastic += qty_plastic;
+      await LocationsService.saveSpecialLocations(specialLocations);
+    } else {
+      throw new Error('Cannot move inventory to member or other locations');
+    }
+
+    // Finally, issue all the Square transactions in a batch for speed and safety
+    if (squareChanges.length > 0) {
+      console.log(squareChanges);
+      const response = await squareClient.inventoryApi.batchChangeInventory({
+        idempotencyKey: Nanoid.nanoid(),
+        changes: squareChanges,
+      });
+      console.log(response);
+    }
   }
 }

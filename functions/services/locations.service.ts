@@ -166,7 +166,7 @@ export class LocationsService {
     const itemInventory =
       await squareClient.inventoryApi.retrieveInventoryCount(itemVariationId);
     return _.chain(itemInventory.result.counts)
-      .map((loc: any) => [loc.locationId, loc.quantity])
+      .map((loc: any) => [loc.locationId, _.toInteger(loc.quantity)])
       .fromPairs()
       .value();
   }
@@ -330,44 +330,47 @@ export class LocationsService {
     }
   }
 
+  public static async getSpecialLocations() {
+    return await this.getFirestoreDocument(`special-locations/all`);
+  }
+
+  public static async saveSpecialLocations(specialLocationsDoc: any) {
+    const firestore = new Firestore();
+    await firestore
+      .collection('special-locations')
+      .doc('all')
+      .set(specialLocationsDoc);
+  }
+
   public static async getNonmemberLocationGroupsWithQtys(squareClient: Client) {
     const foodVendorLocations = await this.getFoodVendors(
       squareClient,
       _.identity
     );
     const dropoffLocations = await this.getDropoffPoints(squareClient);
+    const specialLocations = await this.getSpecialLocations();
 
     // Display these in the same order as they are onscreen
     let grps = [
       {
         group: 'Warehouse',
-        locations: [],
-        qty_metal: 0,
-        qty_plastic: 0,
+        locations: [specialLocations.warehouse],
       },
       {
         group: 'Food Vendors',
         locations: foodVendorLocations,
-        qty_metal: 0,
-        qty_plastic: 0,
       },
       {
         group: 'Members',
         locations: [],
-        qty_metal: 0,
-        qty_plastic: 0,
       },
       {
         group: 'Dropoff Points',
         locations: dropoffLocations,
-        qty_metal: 0,
-        qty_plastic: 0,
       },
       {
         group: 'Shrinkage',
-        locations: [],
-        qty_metal: 0,
-        qty_plastic: 0,
+        locations: [specialLocations.shrinkage],
       },
     ];
     grps = grps.map((grp) => ({
@@ -384,30 +387,33 @@ export class LocationsService {
     return grps;
   }
 
-  public static async getNonmemberLocationGroups(/* pgPool: Pool */) {
-    // const qry = await pgPool.query(
-    //   "SELECT * FROM locations WHERE type IN ('warehouse','dropoff-point','shrinkage') OR (type = 'food-vendor' and not requires_sub_location)"
-    // );
-    // const recs = qry.rows;
-    // // Display these in the same order as they are onscreen
-    // const grps = [
-    //   {
-    //     group: 'Warehouse',
-    //     locations: _.filter(recs, { type: 'warehouse' } as any),
-    //   },
-    //   {
-    //     group: 'Food Vendors',
-    //     locations: _.filter(recs, { type: 'food-vendor' } as any),
-    //   },
-    //   {
-    //     group: 'Dropoff Points',
-    //     locations: _.filter(recs, { type: 'dropoff-point' } as any),
-    //   },
-    //   {
-    //     group: 'Shrinkage',
-    //     locations: _.filter(recs, { type: 'shrinkage' } as any),
-    //   },
-    // ];
-    // return grps;
+  public static async getNonmemberLocationGroups(squareClient: Client) {
+    const foodVendorLocations = await this.getFoodVendors(
+      squareClient,
+      _.identity
+    );
+    const dropoffLocations = await this.getDropoffPoints(squareClient);
+    const specialLocations = await this.getSpecialLocations();
+
+    // Display these in the same order as they are onscreen
+    let grps = [
+      {
+        group: 'Warehouse',
+        locations: [specialLocations.warehouse],
+      },
+      {
+        group: 'Food Vendors',
+        locations: foodVendorLocations,
+      },
+      {
+        group: 'Dropoff Points',
+        locations: dropoffLocations,
+      },
+      {
+        group: 'Shrinkage',
+        locations: [specialLocations.shrinkage],
+      },
+    ];
+    return grps;
   }
 }

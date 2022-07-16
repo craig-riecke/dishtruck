@@ -1,5 +1,7 @@
 <h1>Dashboard</h1>
 
+<mat-progress-bar mode="indeterminate" *ngIf="isBusy"></mat-progress-bar>
+
 <table mat-table #table [dataSource]="locationGroups$">
   <ng-container matColumnDef="type">
     <th mat-header-cell *matHeaderCellDef></th>

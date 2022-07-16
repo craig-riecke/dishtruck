@@ -9,26 +9,11 @@ export interface Balance {
   qty_metal: number;
 }
 
-export interface Transaction {
-  event_timestamp: Date;
-  location_id: number;
-  location_name: string;
-  qty_plastic: number;
-  qty_metal: number;
-}
-
-export interface TransactionHistory {
-  location_name: string;
-  location_type: string;
-  balance_forward: Balance;
-  transactions: Transaction[];
-  balance_at_end: Balance;
-  current_balance: Balance;
-}
-
 export interface MoveTransaction {
-  from_location_id: number;
-  to_location_id: number;
+  from_type: string;
+  from_location_id: string;
+  to_type: string;
+  to_location_id: string;
   qty_plastic: number;
   qty_metal: number;
 }
@@ -64,32 +49,11 @@ export interface LocationGroup {
   qty_plastic: number;
 }
 
-export interface Invoice {
-  location_name: string;
-  transactions: Transaction[];
-  invoice_balance: Balance;
-}
-
 @Injectable({
   providedIn: 'root',
 })
 export class AdminService {
   constructor(private http: HttpClient) {}
-
-  getHistory(
-    location_id: number,
-    from: Date,
-    to: Date
-  ): Observable<TransactionHistory> {
-    return this.http.get<TransactionHistory>(
-      `${
-        environment.DISHTRUCK_API_BASE_URL
-      }/admin/transactions?location_id=${location_id}&from=${format(
-        from,
-        'yyyy-MM-dd'
-      )}&to=${format(to, 'yyyy-MM-dd')}`
-    );
-  }
 
   postTransaction(moveTrx: MoveTransaction): Observable<void> {
     return this.http.post<void>(
@@ -111,13 +75,9 @@ export class AdminService {
     );
   }
 
-  getInvoice(
-    location_id: number,
-    from: string,
-    to: string
-  ): Observable<Invoice> {
-    return this.http.get<Invoice>(
-      `${environment.DISHTRUCK_API_BASE_URL}/admin/invoice?location_id=${location_id}&from=${from}&to=${to}`
+  getLocation(type: string, id: string): Observable<DishtruckLocation> {
+    return this.http.get<DishtruckLocation>(
+      `${environment.DISHTRUCK_API_BASE_URL}/location/${type}?id=${id}`
     );
   }
 }

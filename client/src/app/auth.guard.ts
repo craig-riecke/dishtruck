@@ -7,7 +7,7 @@ import {
   UrlTree,
 } from '@angular/router';
 import { SocialAuthService, SocialUser } from '@abacritt/angularx-social-login';
-import { map, Observable, tap } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { CurrentUserService } from './services/current-user.service';
 
 @Injectable({

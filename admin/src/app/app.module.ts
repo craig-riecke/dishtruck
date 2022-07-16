@@ -16,16 +16,21 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { LocationComponent } from './location/location.component';
 import { LoginComponent } from './login/login.component';
-import { GoogleLoginProvider, SocialLoginModule } from 'angularx-social-login';
+import {
+  GoogleLoginProvider,
+  SocialAuthServiceConfig,
+  SocialLoginModule,
+} from '@abacritt/angularx-social-login';
 import { AuthGuard } from './auth.guard';
 import { customInterceptorProviders } from './custom-interceptors/index';
 import { HttpClientModule } from '@angular/common/http';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatCardModule } from '@angular/material/card';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
-import { InvoiceComponent } from './invoice/invoice.component';
+import { environment } from 'src/environments/environment';
 
 @NgModule({
   declarations: [
@@ -33,7 +38,6 @@ import { InvoiceComponent } from './invoice/invoice.component';
     DashboardComponent,
     LocationComponent,
     LoginComponent,
-    InvoiceComponent,
   ],
   imports: [
     AppRoutingModule,
@@ -49,6 +53,7 @@ import { InvoiceComponent } from './invoice/invoice.component';
     MatListModule,
     MatMenuModule,
     MatNativeDateModule,
+    MatProgressBarModule,
     MatSelectModule,
     MatSidenavModule,
     MatTableModule,
@@ -64,12 +69,13 @@ import { InvoiceComponent } from './invoice/invoice.component';
         providers: [
           {
             id: GoogleLoginProvider.PROVIDER_ID,
-            provider: new GoogleLoginProvider(
-              '952379108326-ct5jshq38p20tr910lnkh57c0hdqqf75.apps.googleusercontent.com'
-            ), // your client id
+            provider: new GoogleLoginProvider(environment.OAUTH2_CLIENT_ID), // your client id
           },
         ],
-      },
+        onError: (err: any) => {
+          console.error(err);
+        },
+      } as SocialAuthServiceConfig,
     },
     AuthGuard,
     customInterceptorProviders,

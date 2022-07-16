@@ -1,7 +1,10 @@
 import { Client, Environment } from 'square';
 import { HttpFunction } from '@google-cloud/functions-framework/build/src/functions';
 import * as dotenv from 'dotenv';
-import { LocationsService } from './services/locations.service';
+import {
+  DishtruckLocation,
+  LocationsService,
+} from './services/locations.service';
 import { TransactionsService } from './services/transactions.service';
 import * as _ from 'lodash';
 import * as jwt from 'jsonwebtoken';
@@ -84,17 +87,11 @@ export const locations: HttpFunction = async (req: any, res) => {
     if (type === 'register-me') {
       await LocationsService.registerMe(squareClient, thisUserId);
     } else {
-      locations =
-        type === 'sublocations'
-          ? await LocationsService.sublocations(
-              squareClient,
-              req.query.parent_location_id
-            )
-          : await LocationsService.locationsWithType(
-              squareClient,
-              type,
-              thisUserId
-            );
+      locations = await LocationsService.locationsWithType(
+        squareClient,
+        type,
+        thisUserId
+      );
     }
     console.log('Query ended');
     res.json(locations);
@@ -161,9 +158,10 @@ export const admin: HttpFunction = async (req: any, res) => {
     console.log(`Transcation type ${type}`);
 
     // All admin points are locked down except /locations, which is needed for the sidebar
+    let thisUserId = null;
     if (type !== 'locations') {
       const thisUser: any = await jwtPrincipal(req.headers.authorization);
-      const thisUserId = thisUser.email;
+      thisUserId = thisUser.email;
 
       const adminRecord = [
         'craig.riecke@gmail.com',
@@ -179,39 +177,23 @@ export const admin: HttpFunction = async (req: any, res) => {
 
     console.log('Running trx');
 
+    let locations: DishtruckLocation;
+    const id = req.query.id;
     switch (type) {
-      // case 'transactions':
-      //   switch (req.method) {
-      //     case 'GET':
-      //       const trx = await TransactionsService.getHistory(
-      //         pgPool,
-      //         req.query.location_id,
-      //         req.query.from,
-      //         req.query.to
-      //       );
-      //       res.json(trx);
-      //       break;
-      //     case 'POST':
-      //       await TransactionsService.adminTransaction(
-      //         pgPool,
-      //         req.body.from_location_id,
-      //         req.body.to_location_id,
-      //         req.body.qty_metal,
-      //         req.body.qty_plastic
-      //       );
-      //       res.status(204).send('');
-      //       break;
-      //   }
-      //   break;
-      // case 'invoice':
-      //   const invoice = await TransactionsService.getInvoice(
-      //     pgPool,
-      //     req.query.location_id,
-      //     req.query.from,
-      //     req.query.to
-      //   );
-      //   res.json(invoice);
-      //   break;
+      case 'transactions':
+        console.log(req.body);
+        await TransactionsService.adminTransaction(
+          squareClient,
+          thisUserId,
+          req.body.from_type,
+          req.body.from_location_id,
+          req.body.to_type,
+          req.body.to_location_id,
+          req.body.qty_metal,
+          req.body.qty_plastic
+        );
+        res.status(204).send('');
+        break;
       case 'locations-with-qtys':
         const locationGroupsWithQtys =
           await LocationsService.getNonmemberLocationGroupsWithQtys(
@@ -219,11 +201,28 @@ export const admin: HttpFunction = async (req: any, res) => {
           );
         res.json(locationGroupsWithQtys);
         break;
-      // case 'locations':
-      //   const locationGroups =
-      //     await LocationsService.getNonmemberLocationGroups(pgPool);
-      //   res.json(locationGroups);
-      //   break;
+      case 'locations':
+        const locationGroups =
+          await LocationsService.getNonmemberLocationGroups(squareClient);
+        res.json(locationGroups);
+        break;
+      case 'food-vendor':
+        locations = await LocationsService.getFoodVendorById(squareClient, id);
+        res.json(locations);
+        break;
+      case 'dropoff-point':
+        locations = await LocationsService.getDropoffPointById(
+          squareClient,
+          id
+        );
+        res.json(locations);
+        break;
+      case 'special-location':
+        const allSpecialLocations =
+          await LocationsService.getSpecialLocations();
+        locations = allSpecialLocations[id];
+        res.json(locations);
+        break;
     }
     console.log('Trx ended');
   } catch (err: any) {

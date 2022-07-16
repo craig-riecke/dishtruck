@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { AdminService, LocationGroup } from '../services/admin.service';
 
 @Component({
@@ -9,10 +10,13 @@ import { AdminService, LocationGroup } from '../services/admin.service';
 })
 export class DashboardComponent implements OnInit {
   locationGroups$: Observable<LocationGroup[]>;
+  isBusy = true;
 
   constructor(private adminService: AdminService) {}
 
   ngOnInit(): void {
-    this.locationGroups$ = this.adminService.getLocationGroupsWithQtys();
+    this.locationGroups$ = this.adminService
+      .getLocationGroupsWithQtys()
+      .pipe(tap(() => (this.isBusy = false)));
   }
 }
