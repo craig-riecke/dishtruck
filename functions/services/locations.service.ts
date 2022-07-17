@@ -1,7 +1,7 @@
 // import { Pool } from 'pg';
 import { Firestore } from '@google-cloud/firestore';
 import * as _ from 'lodash';
-import { Client } from 'square';
+import { Client, Customer } from 'square';
 import { parseISO } from 'date-fns';
 
 export interface DishtruckLocation {
@@ -23,6 +23,8 @@ export interface DishtruckLocation {
 }
 
 export class LocationsService {
+  private static emailToSquareMap: any = {};
+
   private static async getFirestoreDocument(docPath: string): Promise<any> {
     const firestore = new Firestore();
 
@@ -34,41 +36,53 @@ export class LocationsService {
     squareClient: Client,
     userId: string
   ): Promise<DishtruckLocation | null> {
-    const response = await squareClient.customersApi.searchCustomers({
-      query: {
-        filter: {
-          emailAddress: {
-            exact: userId,
+    let squareCustomer: Customer;
+    // Lookup in cache first to save you a trip to Square customer.  We cache Square customers
+    // because the searchCustomer doesn't immediately pick up a new customer after we've created them.
+    // Grrrrr!!!!
+    if (userId in this.emailToSquareMap) {
+      squareCustomer = this.emailToSquareMap[userId];
+    } else {
+      const response = await squareClient.customersApi.searchCustomers({
+        query: {
+          filter: {
+            emailAddress: {
+              exact: userId,
+            },
           },
         },
-      },
-    });
-    if (!response?.result?.customers || response.result.customers.length < 1) {
-      return null;
-    } else {
-      const customer = response.result.customers[0];
-
-      const memberDoc = await this.getFirestoreDocument(
-        `members/${customer.id}`
-      );
-      return {
-        id: customer.id || 'N/A',
-        type: 'member',
-        full_name: customer.emailAddress || 'N/A"',
-        qty_checked_out_this_month: memberDoc.qty_checked_out_this_month || 0,
-        qty_metal: memberDoc.qty_metal,
-        qty_plastic: memberDoc.qty_plastic,
-        creation_date: parseISO(customer.createdAt || '1970-01-01'),
-        requires_sub_location: false,
-        parent_location_id: null,
-        default_container_type: '',
-        lat: null,
-        lng: null,
-        street_address: null,
-        city: null,
-        zip: null,
-      };
+      });
+      if (
+        !response?.result?.customers ||
+        response.result.customers.length < 1
+      ) {
+        return null;
+      }
+      squareCustomer = response.result.customers[0];
+      this.emailToSquareMap[userId] = squareCustomer;
     }
+    console.log('Square customer is', squareCustomer);
+
+    const memberDoc = await this.getFirestoreDocument(
+      `members/${squareCustomer.id}`
+    );
+    return {
+      id: squareCustomer.id || 'N/A',
+      type: 'member',
+      full_name: squareCustomer.emailAddress || 'N/A',
+      qty_checked_out_this_month: memberDoc.qty_checked_out_this_month || 0,
+      qty_metal: memberDoc.qty_metal,
+      qty_plastic: memberDoc.qty_plastic,
+      creation_date: parseISO(squareCustomer.createdAt || '1970-01-01'),
+      requires_sub_location: false,
+      parent_location_id: null,
+      default_container_type: '',
+      lat: null,
+      lng: null,
+      street_address: null,
+      city: null,
+      zip: null,
+    };
   }
 
   public static async getDropoffPointById(
@@ -320,6 +334,7 @@ export class LocationsService {
       if (!squareCustomer?.id) {
         throw new Error(`WTF???`);
       }
+      this.emailToSquareMap[userId] = squareCustomer;
 
       await firestore.collection('members').doc(squareCustomer.id).set({
         id: squareCustomer.id,
