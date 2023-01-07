@@ -1,4 +1,3 @@
-// import { Pool } from 'pg';
 import { Firestore } from '@google-cloud/firestore';
 import * as _ from 'lodash';
 import { Client, Customer } from 'square';
@@ -20,6 +19,10 @@ export interface DishtruckLocation {
   street_address: string | null;
   city: string | null;
   zip: string | null;
+}
+
+export interface LocationOptions {
+  includeQty: boolean;
 }
 
 export class LocationsService {
@@ -132,7 +135,8 @@ export class LocationsService {
   }
 
   private static async getDropoffPoints(
-    squareClient: Client
+    squareClient: Client,
+    locationOptions: LocationOptions
   ): Promise<DishtruckLocation[]> {
     // Get all locations from Square
     const allLocationsSquare = await squareClient.locationsApi.listLocations();
@@ -144,15 +148,19 @@ export class LocationsService {
       (loc: any) => dropoffPointIds.includes(loc.id)
     );
 
-    // Get inventory values as well
-    const plasticInventoryByLocation = await this.getInventoryCountsByLocation(
-      squareClient,
-      process.env.SQUARE_ITEM_VARIATION_PLASTIC || 'N/A'
-    );
-    const metalInventoryByLocation = await this.getInventoryCountsByLocation(
-      squareClient,
-      process.env.SQUARE_ITEM_VARIATION_METAL || 'N/A'
-    );
+    // Get inventory values as well, if needed
+    let plasticInventoryByLocation: _.Dictionary<any> = [];
+    let metalInventoryByLocation: _.Dictionary<any> = [];
+    if (locationOptions.includeQty) {
+      plasticInventoryByLocation = await this.getInventoryCountsByLocation(
+        squareClient,
+        process.env.SQUARE_ITEM_VARIATION_PLASTIC || 'N/A'
+      );
+      metalInventoryByLocation = await this.getInventoryCountsByLocation(
+        squareClient,
+        process.env.SQUARE_ITEM_VARIATION_METAL || 'N/A'
+      );
+    }
 
     return _.map(dropoffPointsSquare, (dop) => ({
       id: dop.id || 'N/A',
@@ -241,38 +249,47 @@ export class LocationsService {
 
   private static async getFoodVendors(
     squareClient: Client,
-    filterFn: (x: any) => Boolean
+    filterFn: (x: any) => Boolean,
+    locationOptions: LocationOptions
   ): Promise<DishtruckLocation[]> {
-    // Get all locations from Square
+    // Get all locations from Square.  Note: we may need to cache the data needed (the
+    // address) to Firestore.
     const allLocationsSquare = (await squareClient.locationsApi.listLocations())
       .result.locations;
     const allLocationsSquareAsObject = _.chain(allLocationsSquare)
       .map((loc: any) => [loc.id, loc])
       .fromPairs()
       .value();
+
     const foodVendors = await this.getFirestoreDocument(`food-vendors/all`);
 
-    // Get inventory values as well
-    const plasticInventoryByLocation = await this.getInventoryCountsByLocation(
-      squareClient,
-      process.env.SQUARE_ITEM_VARIATION_PLASTIC || 'N/A'
-    );
-    const metalInventoryByLocation = await this.getInventoryCountsByLocation(
-      squareClient,
-      process.env.SQUARE_ITEM_VARIATION_METAL || 'N/A'
-    );
+    // Get inventory values as well, if necessary
+    let plasticInventoryByLocation: _.Dictionary<any> = [];
+    let metalInventoryByLocation: _.Dictionary<any> = [];
+    if (locationOptions.includeQty) {
+      plasticInventoryByLocation = await this.getInventoryCountsByLocation(
+        squareClient,
+        process.env.SQUARE_ITEM_VARIATION_PLASTIC || 'N/A'
+      );
+      metalInventoryByLocation = await this.getInventoryCountsByLocation(
+        squareClient,
+        process.env.SQUARE_ITEM_VARIATION_METAL || 'N/A'
+      );
+    }
 
     return _.chain(foodVendors.locations)
       .filter(filterFn) // Only get top-level listings here
       .map((fv) => {
         const fvs = allLocationsSquareAsObject[fv.id];
+        const qty_metal = metalInventoryByLocation[fvs.id] || 0;
+        const qty_plastic = plasticInventoryByLocation[fvs.id] || 0;
         return {
           id: fv.id,
           type: 'food-vendor' as const,
           full_name: fvs.name,
           qty_checked_out_this_month: 0,
-          qty_metal: metalInventoryByLocation[fvs.id] || 0,
-          qty_plastic: plasticInventoryByLocation[fvs.id] || 0,
+          qty_metal,
+          qty_plastic,
           creation_date: parseISO(fvs.createdAt || '1970-01-01'),
           requires_sub_location: fv.requires_sub_location,
           parent_location_id: fv.parent_location_id,
@@ -290,17 +307,20 @@ export class LocationsService {
   public static async locationsWithType(
     squareClient: Client,
     type: string,
-    userId: string
+    userId: string,
+    locationOptions: LocationOptions
   ): Promise<DishtruckLocation | DishtruckLocation[] | null> {
     switch (type) {
       case 'me':
         return await this.getMemberByEmail(squareClient, userId);
       case 'food-vendor':
-        return await this.getFoodVendors(squareClient, (loc) =>
-          _.isNull(loc.parent_location_id)
+        return await this.getFoodVendors(
+          squareClient,
+          (loc) => _.isNull(loc.parent_location_id),
+          locationOptions
         );
       case 'dropoff-point':
-        return await this.getDropoffPoints(squareClient);
+        return await this.getDropoffPoints(squareClient, locationOptions);
       default:
         return [];
     }
@@ -308,11 +328,13 @@ export class LocationsService {
 
   public static async sublocations(
     squareClient: Client,
-    parent_location_id: string
+    parent_location_id: string,
+    locationOptions: LocationOptions
   ): Promise<DishtruckLocation[]> {
     return await this.getFoodVendors(
       squareClient,
-      (loc) => parent_location_id === loc.parent_location_id
+      (loc) => parent_location_id === loc.parent_location_id,
+      locationOptions
     );
   }
 
@@ -360,9 +382,12 @@ export class LocationsService {
   public static async getNonmemberLocationGroupsWithQtys(squareClient: Client) {
     const foodVendorLocations = await this.getFoodVendors(
       squareClient,
-      _.identity
+      _.identity,
+      { includeQty: true }
     );
-    const dropoffLocations = await this.getDropoffPoints(squareClient);
+    const dropoffLocations = await this.getDropoffPoints(squareClient, {
+      includeQty: true,
+    });
     const specialLocations = await this.getSpecialLocations();
 
     // Display these in the same order as they are onscreen
@@ -410,9 +435,12 @@ export class LocationsService {
   public static async getNonmemberLocationGroups(squareClient: Client) {
     const foodVendorLocations = await this.getFoodVendors(
       squareClient,
-      _.identity
+      _.identity,
+      { includeQty: true }
     );
-    const dropoffLocations = await this.getDropoffPoints(squareClient);
+    const dropoffLocations = await this.getDropoffPoints(squareClient, {
+      includeQty: true,
+    });
     const specialLocations = await this.getSpecialLocations();
 
     // Display these in the same order as they are onscreen

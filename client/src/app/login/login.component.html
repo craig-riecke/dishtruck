@@ -14,15 +14,30 @@
         Sign in with Google. If you are not yet a Dish Truck member, you will
         get a chance to sign up.
       </p>
+      <p>
+        On newer phones, login will be automatic. On older phones, click the G
+        button below to login.
+      </p>
 
       <br /><br />
 
-      <asl-google-signin-button>Sign in With Google</asl-google-signin-button>
+      <div class="center-button">
+        <div class="inside-center-button">
+          <asl-google-signin-button></asl-google-signin-button>
+        </div>
+      </div>
 
       <br /><br />
+
       <p>Not a member yet? Need more info?</p>
 
       <a href="/how-it-works" mat-raised-button> Learn More </a>
+
+      <br /><br />
+      <div *ngIf="loading">
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+        Please wait for the login to complete...
+      </div>
     </div>
     <div></div>
   </div>

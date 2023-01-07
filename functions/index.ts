@@ -7,8 +7,7 @@ import {
 } from './services/locations.service';
 import { TransactionsService } from './services/transactions.service';
 import * as _ from 'lodash';
-import * as jwt from 'jsonwebtoken';
-var jwksClient = require('jwks-rsa');
+import { Auth } from './util/auth';
 
 require('source-map-support').install();
 
@@ -22,29 +21,6 @@ const squareClient = new Client({
 
 export const helloWorld: HttpFunction = (req, res) => {
   res.json('Hello, World from TypeScript');
-};
-
-const jwtPrincipal = async (authHeader: string) => {
-  const jwToken = authHeader.split(/ /)[1];
-  // We only decode to get the kid in the header.
-  const decodedToken: jwt.Jwt | null = jwt.decode(jwToken, { complete: true });
-  if (!decodedToken) {
-    throw new Error('Could not decode JWT');
-  }
-  var client = jwksClient({
-    jwksUri: 'https://www.googleapis.com/oauth2/v3/certs',
-  });
-
-  const kid = decodedToken.header.kid;
-  const key = await client.getSigningKey(kid);
-  const signingKey = key.getPublicKey();
-
-  try {
-    return jwt.verify(jwToken, signingKey);
-  } catch (err) {
-    console.error('Something bad happened when trying to verify token: ' + err);
-    throw err;
-  }
 };
 
 const isCorsPreflight = (req: any, res: any): boolean => {
@@ -73,7 +49,7 @@ export const locations: HttpFunction = async (req: any, res) => {
     }
 
     // Get the JWT principal
-    const thisUser: any = await jwtPrincipal(req.headers.authorization);
+    const thisUser: any = await Auth.jwtPrincipal(req.headers.authorization);
     const thisUserId = thisUser.email;
     console.log(JSON.stringify(thisUser));
 
@@ -90,7 +66,8 @@ export const locations: HttpFunction = async (req: any, res) => {
       locations = await LocationsService.locationsWithType(
         squareClient,
         type,
-        thisUserId
+        thisUserId,
+        { includeQty: false }
       );
     }
     console.log('Query ended');
@@ -108,7 +85,7 @@ export const transactions: HttpFunction = async (req: any, res) => {
       return;
     }
 
-    const thisUser: any = await jwtPrincipal(req.headers.authorization);
+    const thisUser: any = await Auth.jwtPrincipal(req.headers.authorization);
     const thisUserId = thisUser.email;
 
     if (req.method !== 'POST') {
@@ -160,7 +137,7 @@ export const admin: HttpFunction = async (req: any, res) => {
     // All admin points are locked down except /locations, which is needed for the sidebar
     let thisUserId = null;
     if (type !== 'locations') {
-      const thisUser: any = await jwtPrincipal(req.headers.authorization);
+      const thisUser: any = await Auth.jwtPrincipal(req.headers.authorization);
       thisUserId = thisUser.email;
 
       const adminRecord = [

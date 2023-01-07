@@ -24,3 +24,16 @@ p {
   width: 70%;
   text-align: center;
 }
+
+.center-button {
+  height: 20px;
+  position: relative;
+}
+
+.inside-center-button {
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  -ms-transform: translateY(-50%);
+  transform: translateY(-50%);
+}

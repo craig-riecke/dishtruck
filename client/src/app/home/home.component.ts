@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { SocialAuthService } from '@abacritt/angularx-social-login';
 import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import {
   DishtruckLocation,
   LocationService,
@@ -13,6 +14,7 @@ import {
 })
 export class HomeComponent implements OnInit {
   memberRecord$: Observable<DishtruckLocation>;
+  loading: boolean = true;
 
   constructor(
     private locationService: LocationService,
@@ -20,6 +22,8 @@ export class HomeComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.memberRecord$ = this.locationService.getMyMemberRecord();
+    this.memberRecord$ = this.locationService
+      .getMyMemberRecord()
+      .pipe(tap(() => (this.loading = false)));
   }
 }
