@@ -19,6 +19,7 @@
         <mat-card
           *ngFor="let dropoffPoint of dropoffPoints"
           class="dropoff-point-card"
+          (click)="gotoDropoff(dropoffPoint.id)"
         >
           <mat-card-header>
             <mat-card-title>{{ dropoffPoint.full_name }}</mat-card-title>

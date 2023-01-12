@@ -5,7 +5,7 @@ import { tap } from 'rxjs';
 
 export interface CheckoutContainerAction {
   qty: number;
-  from_location_id: number;
+  from_location_id: string;
 }
 
 export interface VerifyCheckout {
@@ -17,7 +17,7 @@ export interface VerifyCheckout {
 export interface DropoffContainerAction {
   qty_metal: number;
   qty_plastic: number;
-  to_location_id: number;
+  to_location_id: string;
 }
 
 @Injectable({

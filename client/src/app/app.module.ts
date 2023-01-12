@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { ErrorHandler, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 
 import { AppRoutingModule } from './app-routing.module';
@@ -37,6 +37,7 @@ import { customInterceptorProviders } from './custom-interceptors/index';
 import { BecomeAMemberComponent } from './become-a-member/become-a-member.component';
 import { HowItWorksComponent } from './how-it-works/how-it-works.component';
 import { SupportComponent } from './support/support.component';
+import * as Sentry from '@sentry/angular';
 
 @NgModule({
   declarations: [
@@ -91,6 +92,10 @@ import { SupportComponent } from './support/support.component';
           console.error(err);
         },
       } as SocialAuthServiceConfig,
+    },
+    {
+      provide: ErrorHandler,
+      useValue: Sentry.createErrorHandler({ showDialog: true }),
     },
     AuthGuard,
     customInterceptorProviders,

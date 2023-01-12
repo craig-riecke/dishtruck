@@ -25,6 +25,8 @@
     "@angular/platform-browser-dynamic": "^14.0.5",
     "@angular/router": "^14.0.5",
     "@angular/service-worker": "^14.0.5",
+    "@sentry/angular": "^7.30.0",
+    "@sentry/tracing": "^7.30.0",
     "date-fns": "^2.28.0",
     "lodash-es": "^4.17.21",
     "rxjs": "~7.4.0",

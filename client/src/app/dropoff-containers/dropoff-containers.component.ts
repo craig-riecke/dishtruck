@@ -38,7 +38,7 @@ export class DropoffContainersComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    let dropoffLocationId = 0;
+    let dropoffLocationId = '';
     this.dropoffSubscription = this.route.params
       .pipe(
         tap((params) => (dropoffLocationId = params['to_location_id'])),

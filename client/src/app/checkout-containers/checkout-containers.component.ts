@@ -1,5 +1,9 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
+import {
+  UntypedFormControl,
+  UntypedFormGroup,
+  Validators,
+} from '@angular/forms';
 import { forkJoin, map, Observable, Subscription } from 'rxjs';
 import {
   DishtruckLocation,
@@ -27,7 +31,7 @@ export class CheckoutContainersComponent implements OnInit, OnDestroy {
     qty: new UntypedFormControl(null, Validators.required),
   });
   saving = false;
-  selectedfoodVendorId: number | null = null;
+  selectedfoodVendorId: string | null = null;
   selectedfoodVendorName: string | null = null;
   selectedQty: number | null = null;
   saveSubscription: Subscription;

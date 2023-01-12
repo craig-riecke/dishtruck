@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 
 export interface DishtruckLocation {
-  id: number;
+  id: string;
   type: 'member' | 'food-vendor' | 'dropoff-point' | 'unknown-member';
   unique_id?: number;
   full_name: string;
@@ -11,7 +11,7 @@ export interface DishtruckLocation {
   qty_plastic: number;
   creation_date: Date;
   requires_sub_location: boolean;
-  parent_location_id: number;
+  parent_location_id: string | null;
   default_container_type: string;
   lat: number;
   lng: number;
@@ -51,7 +51,7 @@ export class LocationService {
     );
   }
 
-  getSubLocations(parent_location_id: number) {
+  getSubLocations(parent_location_id: string) {
     return this.http.get<DishtruckLocation[]>(
       `${environment.DISHTRUCK_API_BASE_URL}/locations/sublocations?parent_location_id=${parent_location_id}`
     );
