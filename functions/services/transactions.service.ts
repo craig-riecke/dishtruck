@@ -54,10 +54,7 @@ export class TransactionsService {
         'You cannot get more dishes than the food vendor has on hand'
       );
     }
-    const userRec = await LocationsService.getMemberByEmail(
-      squareClient,
-      userId
-    );
+    const userRec = await LocationsService.getMemberByEmail(userId);
     if (!userRec) {
       throw new Error(`Cannot find user ${userId}`);
     }
@@ -134,10 +131,7 @@ export class TransactionsService {
       throw new Error(`Can only dropoff from 1-50 containers at a time`);
     }
 
-    const userRec = await LocationsService.getMemberByEmail(
-      squareClient,
-      userId
-    );
+    const userRec = await LocationsService.getMemberByEmail(userId);
     if (!userRec) {
       throw new Error(`Cannot find user ${userId}`);
     }
