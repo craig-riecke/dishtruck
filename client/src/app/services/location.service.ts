@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
+import { retry } from 'rxjs';
 
 export interface DishtruckLocation {
   id: string;
@@ -33,10 +34,15 @@ export class LocationService {
   }
 
   registerMe() {
-    return this.http.post<DishtruckLocation>(
-      `${environment.DISHTRUCK_API_BASE_URL}/locations/register-me`,
-      {} // Don't need anything - all of what we need is in the token
-    );
+    return this.http
+      .post<DishtruckLocation>(
+        `${environment.DISHTRUCK_API_BASE_URL}/locations/register-me`,
+        {} // Don't need anything - all of what we need is in the token
+      )
+      .pipe(
+        // This might solve intermittent problems with 504 Gateway Timeout
+        retry(2)
+      );
   }
 
   getFoodVendors() {

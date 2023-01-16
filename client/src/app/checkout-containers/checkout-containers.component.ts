@@ -21,7 +21,6 @@ import { addDays } from 'date-fns';
   styleUrls: ['./checkout-containers.component.scss'],
 })
 export class CheckoutContainersComponent implements OnInit, OnDestroy {
-  memberRecord$: Observable<DishtruckLocation>;
   foodVendors$: Observable<DishtruckLocation[]>;
   foodSubVendors$: Observable<DishtruckLocation[]>;
   containerNumbers = range(1, 10);
@@ -46,7 +45,6 @@ export class CheckoutContainersComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.memberRecord$ = this.locationService.getMyMemberRecord();
     this.foodVendors$ = this.locationService.getFoodVendors();
   }
 

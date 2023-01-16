@@ -23,6 +23,7 @@ Sentry.init({
   // We recommend adjusting this value in production
   tracesSampleRate: 0.0,
   environment: environment.production ? 'production' : 'development',
+  release: '2023-01-16 06:55',
 });
 
 if (environment.production) {
