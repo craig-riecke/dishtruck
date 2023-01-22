@@ -16,13 +16,19 @@
         {{ memberRecord.qty_plastic + memberRecord.qty_metal }}
         containers signed out
       </h2>
+      <div></div>
+      <button
+        mat-raised-button
+        *ngIf="memberRecord.qty_plastic + memberRecord.qty_metal > 0"
+      >
+        Return Dish(es)
+      </button>
       <br /><br />
       <p>
         * Remember, your account will be charged for any dishes not returned
         within 30 days of signout, $10 for clamshells, $20 for containers.
       </p>
     </div>
-    <div></div>
   </div>
 </div>
 

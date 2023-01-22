@@ -1,0 +1,15 @@
+config:
+  target: 'https://us-central1-dishtruck.cloudfunctions.net'
+  phases:
+    - duration: 30
+      arrivalCount: 100
+      name: "100 Users login and start"
+    # Then scenarios should just play themselves out over the space of 15 minutes or so.
+
+scenarios:
+  - flow:
+    # This gets dropoff-points.  Expect 200 on each.  If we don't get 200s, the login wasn't successful
+    - get:
+        url: "/locations/dropoff-point"
+        headers:
+          authorization: "Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6ImQzN2FhNTA0MzgxMjkzN2ZlNDM5NjBjYTNjZjBlMjI4NGI2ZmMzNGQiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJuYmYiOjE2NzQwODgyNDcsImF1ZCI6Ijk1MjM3OTEwODMyNi1jdDVqc2hxMzhwMjB0cjkxMGxua2g1N2MwaGRxcWY3NS5hcHBzLmdvb2dsZXVzZXJjb250ZW50LmNvbSIsInN1YiI6IjExNzUxNjI5Mjc0MTA4NTQ5NDY4OCIsImVtYWlsIjoiY3JhaWcucmllY2tlQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJhenAiOiI5NTIzNzkxMDgzMjYtY3Q1anNocTM4cDIwdHI5MTBsbmtoNTdjMGhkcXFmNzUuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJuYW1lIjoiQ3JhaWcgUmllY2tlIiwicGljdHVyZSI6Imh0dHBzOi8vbGgzLmdvb2dsZXVzZXJjb250ZW50LmNvbS9hL0FFZEZUcDRwdHhzNEtGc2I5SWpsV0dPME13UlREaHVfVXBsTWVnWnEzRVhlWWc9czk2LWMiLCJnaXZlbl9uYW1lIjoiQ3JhaWciLCJmYW1pbHlfbmFtZSI6IlJpZWNrZSIsImlhdCI6MTY3NDA4ODU0NywiZXhwIjoxNjc0MDkyMTQ3LCJqdGkiOiI4ZWY0MmQwYTg2NDJiOWMzOTllZWEzMGZlMTY5ZWUyMGI3MWFjMmQ1In0.k5q-csTiuW_D7cbXbY2SDa677qctZy6lZKJvFB6IyB6vCcTdIwmnK7zzyGTV29C0RTG2CzvTIwuG5j6EPviBOhLR3tU4ktX1eItitnBHIeeR1ooXD6x8RSlr6vEWOo5Ir4tienuNIEtG5g5JRpukgx3uJgLoTbku_rhScxrF-srUHUl52mXiWzsiRMTNNXARNMu1rF638-tHtdnLe4HRksfDfj2ZLZgAK__icHMk-t_xKX_D72Vl7Y5u9eNpNsu51-Xs24-PZdW_H4lHVzrRmUU4e8A20T0TQ-pjypmN6A6dx9knRhZ_iJzQ_QVnLjl0dBie8rv0cX73mx60V5Vjvw"
