@@ -17,12 +17,13 @@
         containers signed out
       </h2>
       <div></div>
-      <button
+      <a
         mat-raised-button
         *ngIf="memberRecord.qty_plastic + memberRecord.qty_metal > 0"
+        routerLink="/find-dropoff"
       >
         Return Dish(es)
-      </button>
+      </a>
       <br /><br />
       <p>
         * Remember, your account will be charged for any dishes not returned
